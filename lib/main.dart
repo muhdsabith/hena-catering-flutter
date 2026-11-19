@@ -349,7 +349,7 @@ class StaffPage extends StatelessWidget {
               Text(assignments.length.toString()+' assignments · '+money(wages)+' wages',style:const TextStyle(color:olive,fontSize:10,fontWeight:FontWeight.w700)),
             ])),
           ])));
-        }),
+        })),
     ]);
   }
 }
