@@ -422,11 +422,13 @@ Future<void> _eventDialog(BuildContext context,ValueChanged<Map<String,dynamic>>
   DateTime date=DateTime.now();
   TimeOfDay time=TimeOfDay.now();
   final notes=TextEditingController();
+  String venueType='Auditorium';
   await showDialog(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
     backgroundColor:cream,title:const Text('New event',style:TextStyle(color:coffee)),
     content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
       TextField(controller:name,decoration:const InputDecoration(hintText:'Event name')),
       const SizedBox(height:9),TextField(controller:location,decoration:const InputDecoration(hintText:'Venue / location')),
+      const SizedBox(height:9),DropdownButtonFormField<String>(value:venueType,decoration:const InputDecoration(labelText:'Venue type'),items:['Auditorium','House','Outdoor','Other'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v)=>setD(()=>venueType=v??'Auditorium')),
       const SizedBox(height:9),TextField(controller:notes,decoration:const InputDecoration(hintText:'Event notes / instructions')),
       const SizedBox(height:12),
       const Align(alignment:Alignment.centerLeft,child:Text('Select services',style:TextStyle(color:coffee,fontWeight:FontWeight.w700))),
@@ -442,7 +444,7 @@ Future<void> _eventDialog(BuildContext context,ValueChanged<Map<String,dynamic>>
     ])),
     actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(style:FilledButton.styleFrom(backgroundColor:olive),onPressed:(){
       if(name.text.trim().isEmpty)return;
-      onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':name.text.trim(),'location':location.text.trim(),'services':selectedServices.join(', '),'date':date.toIso8601String().substring(0,10),'time':time.format(ctx),'notes':notes.text.trim(),'staffAssignments':[],'expenses':[],'equipment':_equipmentForServices(selectedServices)});
+      onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':name.text.trim(),'location':location.text.trim(),'venueType':venueType,'services':selectedServices.join(', '),'date':date.toIso8601String().substring(0,10),'time':time.format(ctx),'notes':notes.text.trim(),'staffAssignments':[],'expenses':[],'equipment':_equipmentForServices(selectedServices)});
       Navigator.pop(ctx);
     },child:const Text('Save event'))],
   )));
