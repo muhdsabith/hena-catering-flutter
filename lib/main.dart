@@ -218,98 +218,51 @@ class DashboardPage extends StatelessWidget {
   final Map<String,dynamic> data; final ValueChanged<int> onNavigate;
   const DashboardPage({super.key,required this.data,required this.onNavigate});
   @override Widget build(BuildContext context) {
-    final events=data['events'] as List; final staff=data['staff'] as List; final expenses=data['expenses'] as List;
-    final eventExpenses=(data['events'] as List).expand((event)=>((event['expenses']??[]) as List)).toList();
-    final total=expenses.fold<num>(0,(s,e)=>s+((e['amount'] as num?)??0))+eventExpenses.fold<num>(0,(s,e)=>s+((e['amount'] as num?)??0));
-    final wages=(data['events'] as List).expand((event)=>((event['staffAssignments']??[]) as List)).where((a)=>a['attended']==true).fold<num>(0,(sum,a)=>sum+((a['wage'] as num?)??0));
-    final upcoming=events.where((e)=>((e['date']??'') as String).compareTo(today())>=0).toList();
+    final events=(data['events'] as List).cast<Map<String,dynamic>>();
+    final staff=data['staff'] as List;
+    final upcoming=events.where((e)=>(e['date']??'').toString().compareTo(today())>=0).toList()..sort((a,b)=>(a['date']??'').toString().compareTo((b['date']??'').toString()));
+    final todayEvents=upcoming.where((e)=>e['date']==today()).toList();
+    final wages=events.expand((e)=>((e['staffAssignments']??[]) as List)).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));
+    final expenses=events.expand((e)=>((e['expenses']??[]) as List)).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0))+(data['expenses'] as List).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0));
     return ListView(padding:EdgeInsets.zero,children:[
-      Padding(padding:const EdgeInsets.fromLTRB(20,18,20,20),child:Row(children:[
-        Container(width:44,height:44,decoration:BoxDecoration(color:coffee,borderRadius:BorderRadius.circular(14)),child:const Icon(Icons.restaurant_menu,color:Colors.white)),
-        const SizedBox(width:12),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Text('HENA',style:TextStyle(color:coffee,fontSize:19,fontWeight:FontWeight.w800,letterSpacing:2)),
-          Text('CATERING MANAGEMENT',style:TextStyle(color:muted,fontSize:9,letterSpacing:1.8,fontWeight:FontWeight.w700)),
-        ])),
-        const Icon(Icons.notifications_none_rounded,color:coffee,size:26),
+      Padding(padding:const EdgeInsets.fromLTRB(20,22,20,18),child:Row(children:[
+        Container(width:38,height:38,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(9)),child:const Center(child:Text('H',style:TextStyle(color:surface,fontFamily:'Georgia',fontSize:23,fontWeight:FontWeight.w700)))),
+        const SizedBox(width:10),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('HENA',style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:18,fontWeight:FontWeight.w700,letterSpacing:1.5)),Text('CATERING WORKSPACE',style:TextStyle(color:muted,fontSize:8,letterSpacing:1.5,fontWeight:FontWeight.w700))])),
+        Text(today(),style:const TextStyle(color:muted,fontSize:10)),
       ])),
-      Container(margin:const EdgeInsets.symmetric(horizontal:18),padding:const EdgeInsets.all(22),decoration:BoxDecoration(
-        borderRadius:BorderRadius.circular(26),gradient:const LinearGradient(colors:[Color(0xFF62432F),Color(0xFF38251D)],begin:Alignment.topLeft,end:Alignment.bottomRight)),
-        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          const Text('YOUR EVENTS, UNDER CONTROL',style:TextStyle(color:Color(0xFFD9C9B6),fontSize:10,letterSpacing:1.7,fontWeight:FontWeight.bold)),
-          const SizedBox(height:12),const Text('Every detail.\nBeautifully managed.',style:TextStyle(color:Colors.white,fontSize:27,height:1.15,fontWeight:FontWeight.w600)),
-          const SizedBox(height:18),Row(children:[
-            const Icon(Icons.calendar_month,color:Color(0xFFE6D9C8),size:17),const SizedBox(width:7),
-            Text('${upcoming.length} upcoming events',style:const TextStyle(color:Color(0xFFE6D9C8),fontSize:12)),
-            const Spacer(),TextButton(onPressed:()=>onNavigate(1),child:const Text('View events →',style:TextStyle(color:Colors.white))),
-          ]),
-        ]),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(18, 17, 18, 0),
-        child: Row(children: [
-          Expanded(child: _imageMoment(
-            'Fresh moments',
-            'https://images.unsplash.com/photo-1555244162-803834f70033?w=700&q=80',
-          )),
-          const SizedBox(width: 10),
-          Expanded(child: _imageMoment(
-            'Beautiful setups',
-            'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=700&q=80',
-          )),
-        ]),
-      ),
-      Padding(padding:const EdgeInsets.fromLTRB(20,24,20,12),child:Row(children:[
-        const Expanded(child:Text('Overview',style:TextStyle(color:coffee,fontSize:20,fontWeight:FontWeight.w700))),
-        Text('Today • ${today()}',style:const TextStyle(color:muted,fontSize:11)),
+      Padding(padding:const EdgeInsets.fromLTRB(20,2,20,16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(DateTime.now().toLocal().toString().substring(0,10),style:const TextStyle(color:gold,fontSize:9,fontWeight:FontWeight.w800,letterSpacing:1.4)),
+        const SizedBox(height:5),const Text('Good day, HENA.',style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:27,fontWeight:FontWeight.w700)),
+        const SizedBox(height:4),const Text('Here is the overview of your catering operations.',style:TextStyle(color:muted,fontSize:11)),
       ])),
-      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:GridView.count(
-        crossAxisCount:2,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),mainAxisSpacing:10,crossAxisSpacing:10,childAspectRatio:1.55,
-        children:[
-          _stat('Events',events.length,Icons.event_available,olive),
-          _stat('Staff',staff.length,Icons.groups_2,coffee),
-          _stat('Expenses',money(total),Icons.payments,const Color(0xFF9B6844)),
-          _stat('Upcoming',upcoming.length,Icons.upcoming,const Color(0xFF777B50)),
-        ],
-      )),
-      Padding(padding:const EdgeInsets.fromLTRB(20,24,20,12),child:const Text('Quick access',style:TextStyle(color:coffee,fontSize:20,fontWeight:FontWeight.w700))),
-      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:Row(children:[
-        _quick('Add event',Icons.add_circle_outline,()=>onNavigate(1)),
-        const SizedBox(width:9),_quick('Add staff',Icons.person_add_alt_1,()=>onNavigate(2)),
-        const SizedBox(width:9),_quick('Add expense',Icons.receipt_long,()=>onNavigate(3)),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,mainAxisSpacing:9,crossAxisSpacing:9,childAspectRatio:1.65,children:[
+        _metric('Total events',events.length.toString(),'\${upcoming.length} upcoming'),
+        _metric('Upcoming events',upcoming.length.toString(),'Scheduled jobs'),
+        _metric('Staff wages',money(wages),'Recorded attendance'),
+        _metric('Other expenses',money(expenses),'Across all events'),
       ])),
-      Padding(padding:const EdgeInsets.fromLTRB(20,24,20,12),child:const Text('Operations summary',style:TextStyle(color:coffee,fontSize:20,fontWeight:FontWeight.w700))),
+      Padding(padding:const EdgeInsets.fromLTRB(20,22,20,10),child:Row(children:[const Expanded(child:Text('Upcoming events',style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:17,fontWeight:FontWeight.w700))),TextButton(onPressed:()=>onNavigate(1),child:const Text('View all →',style:TextStyle(color:olive,fontSize:11,fontWeight:FontWeight.w700)))])),
       Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(children:[
-        Row(children:[const Expanded(child:Text('Staff wages',style:TextStyle(color:muted,fontSize:12))),Text(money(wages),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800))]),
-        const Divider(height:18),
-        Row(children:[const Expanded(child:Text('Recorded expenses',style:TextStyle(color:muted,fontSize:12))),Text(money(total),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800))]),
-        const Divider(height:18),
-        Row(children:[const Expanded(child:Text('Total operating costs',style:TextStyle(color:coffee,fontWeight:FontWeight.w800))),Text(money(wages+total),style:const TextStyle(color:olive,fontSize:17,fontWeight:FontWeight.w900))]),
+        if(upcoming.isEmpty) const Padding(padding:EdgeInsets.all(16),child:Text('No events scheduled. Create your first event to start tracking the work.',style:TextStyle(color:muted,fontSize:11))),
+        ...upcoming.take(5).map((e)=>InkWell(onTap:()=>onNavigate(1),child:Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[
+          Container(width:40,height:43,decoration:BoxDecoration(color:cream,borderRadius:BorderRadius.circular(8),border:Border.all(color:const Color(0xFFE8E3D8))),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text((e['date']??'').toString().length>=10?(e['date'] as String).substring(8,10):'--',style:const TextStyle(color:olive,fontFamily:'Georgia',fontSize:17,fontWeight:FontWeight.w700)),Text((e['date']??'').toString().length>=7?(e['date'] as String).substring(5,7):'',style:const TextStyle(color:muted,fontSize:8))])),
+          const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Untitled event',style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700)),Text(e['location']??'Location not added',style:const TextStyle(color:muted,fontSize:10))])),Text(e['time']??'',style:const TextStyle(color:olive,fontSize:10,fontWeight:FontWeight.w700)),
+        ])))),
       ]))),
-      const SizedBox(height:28),
+      Padding(padding:const EdgeInsets.fromLTRB(20,20,20,10),child:const Text("Today's work",style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:17,fontWeight:FontWeight.w700))),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        if(todayEvents.isEmpty) const Text("Nothing on today's schedule.",style:TextStyle(color:muted,fontSize:11)),
+        ...todayEvents.map((e)=>Padding(padding:const EdgeInsets.symmetric(vertical:7),child:Row(children:[Container(width:3,height:34,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(2))),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700)),Text('\${e['time']??''} · \${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))]))]))),
+      ]))),
+      Padding(padding:const EdgeInsets.fromLTRB(20,20,20,10),child:const Text('Operating costs',style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:17,fontWeight:FontWeight.w700))),
+      Padding(padding:const EdgeInsets.fromLTRB(18,0,18,25),child:panel(child:Column(children:[
+        _moneyLine('Staff wages',wages),const Divider(height:18),_moneyLine('Other expenses',expenses),const Divider(height:18),
+        Row(children:[const Expanded(child:Text('Total operating costs',style:TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w800))),Text(money(wages+expenses),style:const TextStyle(color:olive,fontSize:17,fontWeight:FontWeight.w800))]),
+      ]))),
     ]);
   }
-  Widget _imageMoment(String label, String url) => ClipRRect(
-    borderRadius: BorderRadius.circular(18),
-    child: SizedBox(
-      height: 104,
-      child: Stack(fit: StackFit.expand, children: [
-        Image.network(url, fit: BoxFit.cover, errorBuilder: (context, error, stack) =>
-          Container(color: const Color(0xFFE9E0D4), child: const Icon(Icons.restaurant, color: olive, size: 28))),
-        Container(decoration: BoxDecoration(
-          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
-            colors: [Colors.transparent, Colors.black.withOpacity(.62)]),
-        )),
-        Positioned(left: 11, bottom: 10, child: Text(label,
-          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800))),
-      ]),
-    ),
-  );
-  Widget _stat(String label,dynamic value,IconData icon,Color color)=>panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
-    Icon(icon,color:color,size:21),Text('$value',style:const TextStyle(color:coffee,fontSize:23,fontWeight:FontWeight.w800)),Text(label,style:const TextStyle(color:muted,fontSize:12)),
-  ]),padding:const EdgeInsets.all(14));
-  Widget _quick(String label,IconData icon,VoidCallback tap)=>Expanded(child:InkWell(onTap:tap,borderRadius:BorderRadius.circular(18),child:panel(padding:const EdgeInsets.symmetric(vertical:17,horizontal:8),child:Column(children:[
-    Icon(icon,color:olive,size:22),const SizedBox(height:8),Text(label,textAlign:TextAlign.center,style:const TextStyle(color:coffee,fontSize:10,fontWeight:FontWeight.w600)),
-  ]))));
+  Widget _metric(String label,String value,String note)=>panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(value,style:const TextStyle(color:coffee,fontFamily:'Georgia',fontSize:22,fontWeight:FontWeight.w700)),Text(label,style:const TextStyle(color:coffee,fontSize:10,fontWeight:FontWeight.w700)),Text(note,style:const TextStyle(color:muted,fontSize:9))]),padding:const EdgeInsets.all(13));
+  Widget _moneyLine(String label,num value)=>Row(children:[Expanded(child:Text(label,style:const TextStyle(color:muted,fontSize:11))),Text(money(value),style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700))]);
 }
 
 class EventsPage extends StatelessWidget {
