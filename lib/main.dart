@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const coffee = Color(0xFF4B3023);
@@ -17,6 +19,7 @@ class HenaApp extends StatelessWidget {
     title: 'HENA Catering',
     theme: ThemeData(
       useMaterial3: true,
+      textTheme: GoogleFonts.manropeTextTheme(),
       scaffoldBackgroundColor: cream,
       colorScheme: ColorScheme.fromSeed(seedColor: olive, surface: cream),
       appBarTheme: const AppBarTheme(backgroundColor: cream, foregroundColor: coffee),
@@ -96,28 +99,33 @@ class _MainShellState extends State<MainShell> {
       body: SafeArea(child: IndexedStack(index:tab, children:pages)),
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Container(
-          height: 62,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Color(0xFFEDE8E0), width: 0.7)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
-              _navItem(1, Icons.calendar_month_outlined, Icons.calendar_month_rounded, 'Events'),
-              _navItem(2, Icons.people_outline_rounded, Icons.people_rounded, 'Staff'),
-              _navItem(3, Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Expenses'),
-              _navItem(4, Icons.inventory_2_outlined, Icons.inventory_2_rounded, 'Equipment'),
-            ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 9),
+          child: Container(
+            height: 76,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(color: coffee.withOpacity(.10), blurRadius: 22, offset: const Offset(0, 7)),
+              ],
+            ),
+            child: Row(
+              children: [
+                _navItem(0, Iconsax.home, 'Home'),
+                _navItem(1, Iconsax.calendar, 'Events'),
+                _navItem(2, Iconsax.profile_2user, 'Staff'),
+                _navItem(3, Iconsax.receipt_1, 'Expenses'),
+                _navItem(4, Iconsax.box_1, 'Equipment'),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _navItem(int index, IconData outline, IconData filled, String label) {
+  Widget _navItem(int index, IconData icon, String label) {
     final selected = tab == index;
     return Expanded(
       child: Semantics(
@@ -125,20 +133,29 @@ class _MainShellState extends State<MainShell> {
         selected: selected,
         label: label,
         child: InkWell(
+          borderRadius: BorderRadius.circular(24),
           onTap: () => setState(() => tab = index),
           child: SizedBox(
-            height: 62,
+            height: 76,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(selected ? filled : outline, size: 25, color: selected ? coffee : muted),
-                const SizedBox(height: 3),
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: selected ? 4 : 0,
-                  height: 4,
-                  decoration: const BoxDecoration(color: olive, shape: BoxShape.circle),
+                  duration: const Duration(milliseconds: 200),
+                  width: 39,
+                  height: 39,
+                  decoration: BoxDecoration(
+                    color: selected ? olive : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 20, color: selected ? Colors.white : muted),
                 ),
+                const SizedBox(height: 3),
+                Text(label, maxLines: 1, style: TextStyle(
+                  color: selected ? coffee : muted,
+                  fontSize: 9,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                )),
               ],
             ),
           ),
@@ -200,6 +217,20 @@ class DashboardPage extends StatelessWidget {
           ]),
         ]),
       ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(18, 17, 18, 0),
+        child: Row(children: [
+          Expanded(child: _imageMoment(
+            'Fresh moments',
+            'https://images.unsplash.com/photo-1555244162-803834f70033?w=700&q=80',
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: _imageMoment(
+            'Beautiful setups',
+            'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=700&q=80',
+          )),
+        ]),
+      ),
       Padding(padding:const EdgeInsets.fromLTRB(20,24,20,12),child:Row(children:[
         const Expanded(child:Text('Overview',style:TextStyle(color:coffee,fontSize:20,fontWeight:FontWeight.w700))),
         Text('Today • ${today()}',style:const TextStyle(color:muted,fontSize:11)),
@@ -222,6 +253,22 @@ class DashboardPage extends StatelessWidget {
       const SizedBox(height:28),
     ]);
   }
+  Widget _imageMoment(String label, String url) => ClipRRect(
+    borderRadius: BorderRadius.circular(18),
+    child: SizedBox(
+      height: 104,
+      child: Stack(fit: StackFit.expand, children: [
+        Image.network(url, fit: BoxFit.cover, errorBuilder: (context, error, stack) =>
+          Container(color: const Color(0xFFE9E0D4), child: const Icon(Icons.restaurant, color: olive, size: 28))),
+        Container(decoration: BoxDecoration(
+          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Colors.black.withOpacity(.62)]),
+        )),
+        Positioned(left: 11, bottom: 10, child: Text(label,
+          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800))),
+      ]),
+    ),
+  );
   Widget _stat(String label,dynamic value,IconData icon,Color color)=>panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
     Icon(icon,color:color,size:21),Text('$value',style:const TextStyle(color:coffee,fontSize:23,fontWeight:FontWeight.w800)),Text(label,style:const TextStyle(color:muted,fontSize:12)),
   ]),padding:const EdgeInsets.all(14));
