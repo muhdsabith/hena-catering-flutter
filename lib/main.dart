@@ -206,7 +206,9 @@ class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key,required this.data,required this.onNavigate});
   @override Widget build(BuildContext context) {
     final events=data['events'] as List; final staff=data['staff'] as List; final expenses=data['expenses'] as List;
-    final total=expenses.fold<num>(0,(s,e)=>s+((e['amount'] as num?)??0));
+    final eventExpenses=(data['events'] as List).expand((event)=>((event['expenses']??[]) as List)).toList();
+    final total=expenses.fold<num>(0,(s,e)=>s+((e['amount'] as num?)??0))+eventExpenses.fold<num>(0,(s,e)=>s+((e['amount'] as num?)??0));
+    final wages=(data['events'] as List).expand((event)=>((event['staffAssignments']??[]) as List)).where((a)=>a['attended']==true).fold<num>(0,(sum,a)=>sum+((a['wage'] as num?)??0));
     final upcoming=events.where((e)=>((e['date']??'') as String).compareTo(today())>=0).toList();
     return ListView(padding:EdgeInsets.zero,children:[
       Padding(padding:const EdgeInsets.fromLTRB(20,18,20,20),child:Row(children:[
@@ -262,6 +264,14 @@ class DashboardPage extends StatelessWidget {
         const SizedBox(width:9),_quick('Add staff',Icons.person_add_alt_1,()=>onNavigate(2)),
         const SizedBox(width:9),_quick('Add expense',Icons.receipt_long,()=>onNavigate(3)),
       ])),
+      Padding(padding:const EdgeInsets.fromLTRB(20,24,20,12),child:const Text('Operations summary',style:TextStyle(color:coffee,fontSize:20,fontWeight:FontWeight.w700))),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(children:[
+        Row(children:[const Expanded(child:Text('Staff wages',style:TextStyle(color:muted,fontSize:12))),Text(money(wages),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800))]),
+        const Divider(height:18),
+        Row(children:[const Expanded(child:Text('Recorded expenses',style:TextStyle(color:muted,fontSize:12))),Text(money(total),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800))]),
+        const Divider(height:18),
+        Row(children:[const Expanded(child:Text('Total operating costs',style:TextStyle(color:coffee,fontWeight:FontWeight.w800))),Text(money(wages+total),style:const TextStyle(color:olive,fontSize:17,fontWeight:FontWeight.w900))]),
+      ]))),
       const SizedBox(height:28),
     ]);
   }
