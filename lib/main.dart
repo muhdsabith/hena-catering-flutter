@@ -5,10 +5,12 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'event_detail_page.dart';
 
-const coffee = Color(0xFF4B3023);
-const olive = Color(0xFF59613A);
-const cream = Color(0xFFF7F2E9);
-const muted = Color(0xFF8C8176);
+const coffee = Color(0xFF20251F);
+const olive = Color(0xFF244438);
+const cream = Color(0xFFF5F3ED);
+const muted = Color(0xFF77786F);
+const gold = Color(0xFFB6945A);
+const surface = Color(0xFFFFFEFA);
 
 void main() => runApp(const HenaApp());
 
@@ -20,21 +22,21 @@ class HenaApp extends StatelessWidget {
     title: 'HENA Catering',
     theme: ThemeData(
       useMaterial3: true,
-      textTheme: GoogleFonts.manropeTextTheme(),
+      textTheme: GoogleFonts.manropeTextTheme().apply(bodyColor: coffee, displayColor: coffee),
       scaffoldBackgroundColor: cream,
-      colorScheme: ColorScheme.fromSeed(seedColor: olive, surface: cream),
+      colorScheme: ColorScheme.fromSeed(seedColor: olive, surface: surface),
       appBarTheme: const AppBarTheme(backgroundColor: cream, foregroundColor: coffee),
       inputDecorationTheme: InputDecorationTheme(
-        filled: true, fillColor: Colors.white,
+        filled: true, fillColor: surface,
         labelStyle: const TextStyle(color: muted, fontSize: 13, fontWeight: FontWeight.w600),
         hintStyle: const TextStyle(color: Color(0xFFB2A89E), fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFECE5DC))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: olive, width: 1.4)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(9), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE8E3D8))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: gold, width: 1.4)),
       ),
       dividerTheme: const DividerThemeData(color: Color(0xFFF0EAE2), thickness: 1, space: 1),
-      snackBarTheme: SnackBarThemeData(behavior: SnackBarBehavior.floating, backgroundColor: coffee, contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+      snackBarTheme: SnackBarThemeData(behavior: SnackBarBehavior.floating, backgroundColor: const Color(0xFF202F29), contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
     ),
     home: const MainShell(),
   );
@@ -111,8 +113,10 @@ class _MainShellState extends State<MainShell> {
       DashboardPage(data:data, onNavigate:(i)=>setState(()=>tab=i)),
       EventsPage(data:data, onAdd:(r)=>addRecord('events',r), onOpen:(id)=>setState(()=>selectedEventId=id)),
       StaffPage(data:data, onAdd:(r)=>addRecord('staff',r)),
-      ExpensesPage(data:data, onAdd:(r)=>addRecord('expenses',r)),
       EquipmentPage(data:data, onSave:refresh),
+      ExpensesPage(data:data, onAdd:(r)=>addRecord('expenses',r)),
+      ReportsPage(data:data),
+      SettingsPage(data:data, onRestore:(v){data=v;refresh();}),
     ];
     return Scaffold(
       body: SafeArea(child: selectedEventId == null ? IndexedStack(index:tab, children:pages) : EventDetailPage(event:(data['events'] as List).cast<Map<String,dynamic>>().firstWhere((e)=>e['id']==selectedEventId), staff:(data['staff'] as List).cast<Map<String,dynamic>>(), onBack:()=>setState(()=>selectedEventId=null), onUpdate:updateEvent, onDelete:()=>deleteEvent(selectedEventId!))),
@@ -121,21 +125,23 @@ class _MainShellState extends State<MainShell> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 4, 14, 9),
           child: Container(
-            height: 72,
+            height: 68,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
+              color: surface,
+              borderRadius: BorderRadius.circular(15),
               boxShadow: [
-                BoxShadow(color: coffee.withOpacity(.10), blurRadius: 22, offset: const Offset(0, 7)),
+                BoxShadow(color: coffee.withOpacity(.07), blurRadius: 16, offset: const Offset(0, 4)),
               ],
             ),
             child: Row(
               children: [
-                _navItem(0, Iconsax.home, 'Home'),
+                _navItem(0, Iconsax.home, 'Dashboard'),
                 _navItem(1, Iconsax.calendar, 'Events'),
                 _navItem(2, Iconsax.profile_2user, 'Staff'),
-                _navItem(3, Iconsax.receipt_1, 'Expenses'),
-                _navItem(4, Iconsax.box_1, 'Equipment'),
+                _navItem(3, Iconsax.box_1, 'Equipment'),
+                _navItem(4, Iconsax.receipt_1, 'Expenses'),
+                _navItem(5, Iconsax.chart_2, 'Reports'),
+                _navItem(6, Iconsax.setting_2, 'Settings'),
               ],
             ),
           ),
@@ -161,8 +167,8 @@ class _MainShellState extends State<MainShell> {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 39,
-                  height: 39,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: selected ? olive : Colors.transparent,
                     shape: BoxShape.circle,
@@ -171,7 +177,7 @@ class _MainShellState extends State<MainShell> {
                 ),
                 const SizedBox(height: 3),
                 Text(label, maxLines: 1, style: TextStyle(
-                  color: selected ? coffee : muted,
+                  color: selected ? olive : muted,
                   fontSize: 10,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
                 )),
@@ -198,7 +204,7 @@ class PageTitle extends StatelessWidget {
   );
 }
 Widget panel({required Widget child, EdgeInsets padding=const EdgeInsets.all(16)})=>Container(
-  padding:padding, decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFEFE9E1),width:.8),boxShadow:[BoxShadow(color:coffee.withOpacity(.035),blurRadius:14,offset:const Offset(0,4))]),
+  padding:padding, decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFE8E3D8),width:.8),boxShadow:[BoxShadow(color:coffee.withOpacity(.035),blurRadius:14,offset:const Offset(0,4))]),
   child:child,
 );
 Widget actionButton(String label, IconData icon, VoidCallback onTap)=>FilledButton.icon(
@@ -451,7 +457,7 @@ List<Map<String,dynamic>> _equipmentForServices(Set<String> selected) {
 
 Future<void> _eventDialog(BuildContext context,ValueChanged<Map<String,dynamic>> onSubmit) async {
   final name=TextEditingController(),location=TextEditingController();
-  const serviceOptions=['Juice','Samavar tea','Herbal tea','Snacks','Popcorn','Cotton candy','Balloon decoration','Other'];
+  const serviceOptions=['Juice','Samavar tea','Herbal tea','Snacks','Popcorn','Cotton candy'];
   final selectedServices=<String>{};
   DateTime date=DateTime.now();
   TimeOfDay time=TimeOfDay.now();
@@ -497,4 +503,61 @@ Future<void> _expenseDialog(BuildContext context,ValueChanged<Map<String,dynamic
       onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'title':title.text.trim(),'amount':n,'category':category,'date':today()});Navigator.pop(ctx);
     },child:const Text('Save'))],
   )));
+}
+
+
+class ReportsPage extends StatelessWidget {
+  final Map<String,dynamic> data;
+  const ReportsPage({super.key,required this.data});
+  @override Widget build(BuildContext context) {
+    final events=(data['events'] as List).cast<Map<String,dynamic>>();
+    final wages=events.expand((e)=>((e['staffAssignments']??[]) as List)).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));
+    final expenses=events.expand((e)=>((e['expenses']??[]) as List)).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0))+(data['expenses'] as List).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0));
+    final costs=wages+expenses;
+    return ListView(padding:EdgeInsets.zero,children:[
+      const PageTitle('Business overview','Reports & costs'),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,mainAxisSpacing:10,crossAxisSpacing:10,childAspectRatio:1.5,children:[
+        _reportMetric('Staff wages',money(wages)),_reportMetric('Other expenses',money(expenses)),_reportMetric('Operating costs',money(costs)),_reportMetric('Events recorded',events.length.toString()),
+      ])),
+      Padding(padding:const EdgeInsets.fromLTRB(18,18,18,8),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        const Text('Cost breakdown',style:TextStyle(fontSize:16,fontWeight:FontWeight.w700,color:coffee)),
+        const SizedBox(height:16),
+        _costBar('Staff wages',wages,costs,gold),const SizedBox(height:14),_costBar('Other expenses',expenses,costs,olive),
+      ]))),
+      Padding(padding:const EdgeInsets.fromLTRB(18,10,18,24),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        const Text('Cost per event',style:TextStyle(fontSize:16,fontWeight:FontWeight.w700,color:coffee)),
+        const SizedBox(height:8),
+        ...events.map((e){final w=((e['staffAssignments']??[]) as List).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));final x=((e['expenses']??[]) as List).fold<num>(0,(n,a)=>n+((a['amount'] as num?)??0));return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(fontWeight:FontWeight.w700,color:coffee)),Text('\${e['date']??''} · \${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))])),Text(money(w+x),style:const TextStyle(fontWeight:FontWeight.w800,color:olive))]));}),
+        if(events.isEmpty) const Text('Create events to start building reports.',style:TextStyle(color:muted,fontSize:12)),
+      ]))),
+    ]);
+  }
+  Widget _reportMetric(String label,String value)=>panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(value,style:const TextStyle(fontSize:21,fontWeight:FontWeight.w700,color:coffee)),Text(label,style:const TextStyle(fontSize:11,color:muted))]),padding:const EdgeInsets.all(14));
+  Widget _costBar(String label,num amount,num total,Color color)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text(label,style:const TextStyle(color:muted,fontSize:12))),Text(money(amount),style:const TextStyle(color:coffee,fontWeight:FontWeight.w700))]),const SizedBox(height:7),ClipRRect(borderRadius:BorderRadius.circular(5),child:LinearProgressIndicator(value:total==0?0:amount/total,minHeight:7,color:color,backgroundColor:cream))]);
+}
+
+class SettingsPage extends StatelessWidget {
+  final Map<String,dynamic> data;
+  final ValueChanged<Map<String,dynamic>> onRestore;
+  const SettingsPage({super.key,required this.data,required this.onRestore});
+  @override Widget build(BuildContext context)=>ListView(padding:EdgeInsets.zero,children:[
+    const PageTitle('Workspace preferences','Settings & backup'),
+    Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      const Icon(Icons.cloud_done_outlined,color:olive,size:25),const SizedBox(height:10),
+      const Text('Device storage',style:TextStyle(color:coffee,fontSize:16,fontWeight:FontWeight.w700)),
+      const SizedBox(height:5),const Text('Your event records are saved locally on this phone.',style:TextStyle(color:muted,fontSize:12)),
+      const SizedBox(height:12),const Row(children:[Icon(Icons.check_circle,color:olive,size:15),SizedBox(width:7),Text('Local storage active',style:TextStyle(color:olive,fontSize:11,fontWeight:FontWeight.w700))]),
+    ]))),
+    Padding(padding:const EdgeInsets.fromLTRB(18,12,18,0),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      const Icon(Icons.backup_outlined,color:gold,size:25),const SizedBox(height:10),
+      const Text('Local backup',style:TextStyle(color:coffee,fontSize:16,fontWeight:FontWeight.w700)),
+      const SizedBox(height:5),const Text('Export your events, staff, wages, expenses and equipment records as a JSON backup.',style:TextStyle(color:muted,fontSize:12)),
+      const SizedBox(height:12),
+      SizedBox(width:double.infinity,child:OutlinedButton.icon(onPressed:()async{final json=const JsonEncoder.withIndent('  ').convert(data);await showDialog(context:context,builder:(ctx)=>AlertDialog(title:const Text('Backup data'),content:SingleChildScrollView(child:SelectableText(json,style:const TextStyle(fontSize:10))),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Close'))]));},icon:const Icon(Icons.download),label:const Text('View / copy backup data'))),
+      SizedBox(width:double.infinity,child:OutlinedButton.icon(onPressed:()async{final controller=TextEditingController();final result=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(title:const Text('Restore backup'),content:TextField(controller:controller,maxLines:8,decoration:const InputDecoration(hintText:'Paste backup JSON here')),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,controller.text),child:const Text('Restore'))]));if(result!=null){try{final decoded=jsonDecode(result) as Map<String,dynamic>;decoded.putIfAbsent('events',()=>[]);decoded.putIfAbsent('staff',()=>[]);decoded.putIfAbsent('expenses',()=>[]);decoded.putIfAbsent('equipment',()=>defaultEquipment);onRestore(decoded);if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Backup restored')));}catch(_){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Invalid backup JSON')));}}},icon:const Icon(Icons.restore),label:const Text('Restore from JSON'))),
+    ]))),
+    Padding(padding:const EdgeInsets.fromLTRB(18,12,18,30),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      const Icon(Icons.info_outline,color:gold,size:25),const SizedBox(height:10),const Text('HENA CATERING',style:TextStyle(color:coffee,fontWeight:FontWeight.w800,letterSpacing:1.2)),const Text('Operations workspace · Offline-first',style:TextStyle(color:muted,fontSize:11)),
+    ]))),
+  ]);
 }
