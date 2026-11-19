@@ -402,16 +402,37 @@ Future<void> _simpleDialog(BuildContext context,String title,String hint,String 
       style:FilledButton.styleFrom(backgroundColor:olive),onPressed:(){if(ctrl.text.trim().isNotEmpty){onSubmit({key:ctrl.text.trim(),'id':DateTime.now().microsecondsSinceEpoch.toString()});Navigator.pop(ctx);}},child:const Text('Save'))],
   ));
 }
+List<Map<String,dynamic>> _equipmentForServices(Set<String> selected) {
+  const templates = <String,List<String>>{
+    'Juice':['Glass','Mixie','Jar','Knife','Cutting board','Code wire','Aripa','Andaav','Tray'],
+    'Samavar tea':['Samavar set','Stove','Gas'],
+    'Snacks':['Chatti','Stove','Gas','Tray'],
+    'Popcorn':['Popcorn machine','Code wire'],
+    'Cotton candy':['Cotton candy machine','Code wire'],
+    'Herbal tea':['Big stove set (3-stove set)','Small stove set (4-stove set)','Gas','Ceramic glass','Disposable glass','Small kettle','Big kettle'],
+  };
+  final result = <Map<String,dynamic>>[];
+  for (final service in selected) {
+    for (final item in templates[service] ?? <String>[]) {
+      result.add({'id':DateTime.now().microsecondsSinceEpoch.toString() + result.length.toString(),'category':service,'name':item,'planned':1,'returned':0,'damaged':0});
+    }
+  }
+  return result;
+}
+
 Future<void> _eventDialog(BuildContext context,ValueChanged<Map<String,dynamic>> onSubmit) async {
   final name=TextEditingController(),location=TextEditingController();
   const serviceOptions=['Juice','Samavar tea','Herbal tea','Snacks','Popcorn','Cotton candy','Balloon decoration','Other'];
   final selectedServices=<String>{};
   DateTime date=DateTime.now();
+  TimeOfDay time=TimeOfDay.now();
+  final notes=TextEditingController();
   await showDialog(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
     backgroundColor:cream,title:const Text('New event',style:TextStyle(color:coffee)),
     content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
       TextField(controller:name,decoration:const InputDecoration(hintText:'Event name')),
       const SizedBox(height:9),TextField(controller:location,decoration:const InputDecoration(hintText:'Venue / location')),
+      const SizedBox(height:9),TextField(controller:notes,decoration:const InputDecoration(hintText:'Event notes / instructions')),
       const SizedBox(height:12),
       const Align(alignment:Alignment.centerLeft,child:Text('Select services',style:TextStyle(color:coffee,fontWeight:FontWeight.w700))),
       const SizedBox(height:6),
@@ -422,10 +443,11 @@ Future<void> _eventDialog(BuildContext context,ValueChanged<Map<String,dynamic>>
         onChanged:(checked)=>setD((){if(checked==true){selectedServices.add(service);}else{selectedServices.remove(service);}}),
       )),
       const SizedBox(height:4),ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.calendar_month,color:olive),title:Text('${date.day}/${date.month}/${date.year}'),onTap:()async{final d=await showDatePicker(context:ctx,firstDate:DateTime(2020),lastDate:DateTime(2100),initialDate:date);if(d!=null)setD(()=>date=d);}),
+      ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.access_time,color:olive),title:Text(time.format(ctx)),onTap:()async{final t=await showTimePicker(context:ctx,initialTime:time);if(t!=null)setD(()=>time=t);}),
     ])),
     actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(style:FilledButton.styleFrom(backgroundColor:olive),onPressed:(){
       if(name.text.trim().isEmpty)return;
-      onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':name.text.trim(),'location':location.text.trim(),'services':selectedServices.join(', '),'date':date.toIso8601String().substring(0,10),'staffAssignments':[],'expenses':[]});
+      onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':name.text.trim(),'location':location.text.trim(),'services':selectedServices.join(', '),'date':date.toIso8601String().substring(0,10),'time':time.format(ctx),'notes':notes.text.trim(),'staffAssignments':[],'expenses':[],'equipment':_equipmentForServices(selectedServices)});
       Navigator.pop(ctx);
     },child:const Text('Save event'))],
   )));
