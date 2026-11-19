@@ -309,19 +309,29 @@ Future<void> _simpleDialog(BuildContext context,String title,String hint,String 
   ));
 }
 Future<void> _eventDialog(BuildContext context,ValueChanged<Map<String,dynamic>> onSubmit) async {
-  final name=TextEditingController(),location=TextEditingController(),services=TextEditingController();
+  final name=TextEditingController(),location=TextEditingController();
+  const serviceOptions=['Juice','Samavar tea','Herbal tea','Snacks','Popcorn','Cotton candy','Balloon decoration','Other'];
+  final selectedServices=<String>{};
   DateTime date=DateTime.now();
   await showDialog(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
     backgroundColor:cream,title:const Text('New event',style:TextStyle(color:coffee)),
     content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
       TextField(controller:name,decoration:const InputDecoration(hintText:'Event name')),
       const SizedBox(height:9),TextField(controller:location,decoration:const InputDecoration(hintText:'Venue / location')),
-      const SizedBox(height:9),TextField(controller:services,decoration:const InputDecoration(hintText:'Services required')),
-      const SizedBox(height:10),ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.calendar_month,color:olive),title:Text('${date.day}/${date.month}/${date.year}'),onTap:()async{final d=await showDatePicker(context:ctx,firstDate:DateTime(2020),lastDate:DateTime(2100),initialDate:date);if(d!=null)setD(()=>date=d);}),
+      const SizedBox(height:12),
+      const Align(alignment:Alignment.centerLeft,child:Text('Select services',style:TextStyle(color:coffee,fontWeight:FontWeight.w700))),
+      const SizedBox(height:6),
+      ...serviceOptions.map((service)=>CheckboxListTile(
+        dense:true,contentPadding:EdgeInsets.zero,controlAffinity:ListTileControlAffinity.leading,
+        activeColor:olive,value:selectedServices.contains(service),
+        title:Text(service,style:const TextStyle(color:coffee,fontSize:13)),
+        onChanged:(checked)=>setD((){if(checked==true){selectedServices.add(service);}else{selectedServices.remove(service);}}),
+      )),
+      const SizedBox(height:4),ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.calendar_month,color:olive),title:Text('${date.day}/${date.month}/${date.year}'),onTap:()async{final d=await showDatePicker(context:ctx,firstDate:DateTime(2020),lastDate:DateTime(2100),initialDate:date);if(d!=null)setD(()=>date=d);}),
     ])),
     actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(style:FilledButton.styleFrom(backgroundColor:olive),onPressed:(){
       if(name.text.trim().isEmpty)return;
-      onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':name.text.trim(),'location':location.text.trim(),'services':services.text.trim(),'date':date.toIso8601String().substring(0,10),'staffAssignments':[],'expenses':[]});
+      onSubmit({'id':DateTime.now().microsecondsSinceEpoch.toString(),'name':name.text.trim(),'location':location.text.trim(),'services':selectedServices.join(', '),'date':date.toIso8601String().substring(0,10),'staffAssignments':[],'expenses':[]});
       Navigator.pop(ctx);
     },child:const Text('Save event'))],
   )));
