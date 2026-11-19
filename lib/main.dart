@@ -321,13 +321,20 @@ class StaffPage extends StatelessWidget {
       ])),
       const SizedBox(height:12),
       Expanded(child:staff.isEmpty?_empty(Icons.groups_outlined,'No staff added','Add staff members by name. Assign their roles per event.'):ListView.builder(
-        padding:const EdgeInsets.symmetric(horizontal:18),itemCount:staff.length,itemBuilder:(c,i)=>Padding(
-          padding:const EdgeInsets.only(bottom:9),child:panel(child:Row(children:[
+        padding:const EdgeInsets.symmetric(horizontal:18),itemCount:staff.length,itemBuilder:(c,i){
+          final personId=staff[i]['id'];
+          final assignments=(data['events'] as List).expand((event)=>((event['staffAssignments']??[]) as List)).where((a)=>a['staffId']==personId).toList();
+          final wages=assignments.where((a)=>a['attended']==true).fold<num>(0,(sum,a)=>sum+((a['wage'] as num?)??0));
+          final roles=assignments.map((a)=>a['role']).where((r)=>r!=null).toSet().join(', ');
+          return Padding(padding:const EdgeInsets.only(bottom:9),child:panel(child:Row(children:[
             CircleAvatar(backgroundColor:olive.withOpacity(.13),child:Text((staff[i]['name']??'?').toString().substring(0,1).toUpperCase(),style:const TextStyle(color:olive,fontWeight:FontWeight.bold))),
-            const SizedBox(width:12),Expanded(child:Text(staff[i]['name']??'',style:const TextStyle(color:coffee,fontWeight:FontWeight.w600))),
-            const Text('Team member',style:TextStyle(color:muted,fontSize:11)),
-          ]))),
-        )),
+            const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Text(staff[i]['name']??'',style:const TextStyle(color:coffee,fontWeight:FontWeight.w700)),
+              Text(roles.isEmpty?'No event role assigned':roles,style:const TextStyle(color:muted,fontSize:10)),
+              Text(assignments.length.toString()+' assignments · '+money(wages)+' wages',style:const TextStyle(color:olive,fontSize:10,fontWeight:FontWeight.w700)),
+            ])),
+          ])));
+        }),
     ]);
   }
 }
