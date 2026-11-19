@@ -26,8 +26,15 @@ class HenaApp extends StatelessWidget {
       appBarTheme: const AppBarTheme(backgroundColor: cream, foregroundColor: coffee),
       inputDecorationTheme: InputDecorationTheme(
         filled: true, fillColor: Colors.white,
+        labelStyle: const TextStyle(color: muted, fontSize: 13, fontWeight: FontWeight.w600),
+        hintStyle: const TextStyle(color: Color(0xFFB2A89E), fontSize: 13),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFECE5DC))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: olive, width: 1.4)),
       ),
+      dividerTheme: const DividerThemeData(color: Color(0xFFF0EAE2), thickness: 1, space: 1),
+      snackBarTheme: SnackBarThemeData(behavior: SnackBarBehavior.floating, backgroundColor: coffee, contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
     ),
     home: const MainShell(),
   );
@@ -114,7 +121,7 @@ class _MainShellState extends State<MainShell> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 4, 14, 9),
           child: Container(
-            height: 76,
+            height: 72,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
@@ -165,7 +172,7 @@ class _MainShellState extends State<MainShell> {
                 const SizedBox(height: 3),
                 Text(label, maxLines: 1, style: TextStyle(
                   color: selected ? coffee : muted,
-                  fontSize: 9,
+                  fontSize: 10,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
                 )),
               ],
@@ -182,21 +189,21 @@ class PageTitle extends StatelessWidget {
   final String eyebrow, title;
   const PageTitle(this.eyebrow,this.title,{super.key});
   @override Widget build(BuildContext context)=>Padding(
-    padding:const EdgeInsets.fromLTRB(20,18,20,16),
+    padding:const EdgeInsets.fromLTRB(20,22,20,18),
     child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      Text(eyebrow.toUpperCase(),style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700,letterSpacing:2)),
+      Text(eyebrow.toUpperCase(),style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.8)),
       const SizedBox(height:7),
-      Text(title,style:const TextStyle(color:coffee,fontSize:29,fontWeight:FontWeight.w700,letterSpacing:-.8)),
+      Text(title,style:const TextStyle(color:coffee,fontSize:27,fontWeight:FontWeight.w800,letterSpacing:-.7)),
     ]),
   );
 }
 Widget panel({required Widget child, EdgeInsets padding=const EdgeInsets.all(16)})=>Container(
-  padding:padding, decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(22)),
+  padding:padding, decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFEFE9E1),width:.8),boxShadow:[BoxShadow(color:coffee.withOpacity(.035),blurRadius:14,offset:const Offset(0,4))]),
   child:child,
 );
 Widget actionButton(String label, IconData icon, VoidCallback onTap)=>FilledButton.icon(
   onPressed:onTap, icon:Icon(icon,size:18), label:Text(label),
-  style:FilledButton.styleFrom(backgroundColor:olive,foregroundColor:Colors.white,padding:const EdgeInsets.symmetric(horizontal:18,vertical:14),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15))),
+  style:FilledButton.styleFrom(backgroundColor:olive,foregroundColor:Colors.white,padding:const EdgeInsets.symmetric(horizontal:17,vertical:13),textStyle:const TextStyle(fontSize:12,fontWeight:FontWeight.w800),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),elevation:0),
 );
 String money(dynamic n)=>'₹${(n is num ? n : 0).toStringAsFixed(0)}';
 String today()=>DateTime.now().toIso8601String().substring(0,10);
@@ -410,9 +417,9 @@ class EquipmentPage extends StatelessWidget {
 }
 
 Widget _empty(IconData icon,String title,String subtitle)=>Center(child:Padding(padding:const EdgeInsets.all(32),child:Column(mainAxisSize:MainAxisSize.min,children:[
-  Icon(icon,color:olive.withOpacity(.55),size:48),const SizedBox(height:12),
-  Text(title,style:const TextStyle(color:coffee,fontSize:17,fontWeight:FontWeight.w700)),
-  const SizedBox(height:6),Text(subtitle,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:12)),
+  Container(width:76,height:76,decoration:BoxDecoration(color:olive.withOpacity(.09),shape:BoxShape.circle),child:Icon(icon,color:olive.withOpacity(.75),size:34)),const SizedBox(height:16),
+  Text(title,textAlign:TextAlign.center,style:const TextStyle(color:coffee,fontSize:17,fontWeight:FontWeight.w800)),
+  const SizedBox(height:7),Text(subtitle,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:12,height:1.45)),
 ])));
 
 Future<void> _simpleDialog(BuildContext context,String title,String hint,String key,ValueChanged<Map<String,dynamic>> onSubmit) async {
