@@ -157,36 +157,50 @@ class _MainShellState extends State<MainShell> {
         child: Tooltip(
           message: label,
           child: InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
               if (tab != index) setState(() => tab = index);
             },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
-              decoration: BoxDecoration(
-                color: selected ? olive : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AnimatedScale(
-                    scale: selected ? 1.08 : 1,
+                  AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
-                    child: Icon(icon, size: 19, color: selected ? const Color(0xFFE8D5AD) : muted),
+                    curve: Curves.easeOutCubic,
+                    width: 36,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: selected ? olive : Colors.transparent,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Center(
+                      child: AnimatedScale(
+                        scale: selected ? 1.06 : 1,
+                        duration: const Duration(milliseconds: 220),
+                        child: Icon(
+                          icon,
+                          size: 19,
+                          color: selected ? const Color(0xFFE8D5AD) : muted,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(label, maxLines: 1, style: TextStyle(
-                      color: selected ? Colors.white : muted,
-                      fontSize: 9,
-                      letterSpacing: .1,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                    )),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: selected ? olive : muted,
+                        fontSize: 9,
+                        letterSpacing: .1,
+                        fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
