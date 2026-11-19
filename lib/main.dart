@@ -367,57 +367,64 @@ class StaffPage extends StatelessWidget {
   }
 }
 
-class ExpensesPage extends StatelessWidget {
-  final Map<String,dynamic> data; final ValueChanged<Map<String,dynamic>> onAdd;
-  const ExpensesPage({super.key,required this.data,required this.onAdd});
-  @override Widget build(BuildContext context) {
-    final expenses=data['expenses'] as List;
-    final total=expenses.fold<num>(0,(s,e)=>s+((e['amount'] as num?)??0));
-    return Column(children:[
-      PageTitle('Track spending','Expenses'),
-      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:Container(width:double.infinity,padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:coffee,borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        const Text('TOTAL RECORDED EXPENSES',style:TextStyle(color:Color(0xFFD9C9B6),fontSize:10,letterSpacing:1.5)),
-        const SizedBox(height:8),Text(money(total),style:const TextStyle(color:Colors.white,fontSize:29,fontWeight:FontWeight.w800)),
-      ]))),
-      Padding(padding:const EdgeInsets.fromLTRB(18,16,18,10),child:Row(children:[
-        const Expanded(child:Text('Recent expenses',style:TextStyle(color:coffee,fontSize:18,fontWeight:FontWeight.w700))),
-        actionButton('Add',Icons.add,()=>_expenseDialog(context,onAdd)),
-      ])),
-      Expanded(child:expenses.isEmpty?_empty(Icons.receipt_long,'No expenses yet','Record staff, supplies, travel, fuel or other expenses.'):ListView.builder(
-        padding:const EdgeInsets.symmetric(horizontal:18),itemCount:expenses.length,itemBuilder:(c,i){
-          final e=expenses[i];return Padding(padding:const EdgeInsets.only(bottom:9),child:panel(child:Row(children:[
-            CircleAvatar(backgroundColor:olive.withOpacity(.12),child:const Icon(Icons.receipt,color:olive,size:19)),
-            const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Text(e['title']??'Expense',style:const TextStyle(color:coffee,fontWeight:FontWeight.w700)),
-              Text('${e['category']??'Other'} • ${e['date']??''}',style:const TextStyle(color:muted,fontSize:11)),
-            ])),
-            Text(money(e['amount']),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800)),
-          ])));
-        })),
-    ]);
-  }
-}
-
 class EquipmentPage extends StatelessWidget {
   final Map<String,dynamic> data; final VoidCallback onSave;
   const EquipmentPage({super.key,required this.data,required this.onSave});
   @override Widget build(BuildContext context) {
-    final items=data['equipment'] as List;
-    final checked=items.where((x)=>x['checked']==true).length;
-    return Column(children:[
-      PageTitle('Event preparation','Equipment'),
-      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Row(children:[const Expanded(child:Text('Packing checklist',style:TextStyle(color:coffee,fontSize:17,fontWeight:FontWeight.w700))),Text('$checked / ${items.length}',style:const TextStyle(color:olive,fontWeight:FontWeight.w700))]),
-        const SizedBox(height:12),ClipRRect(borderRadius:BorderRadius.circular(20),child:LinearProgressIndicator(value:items.isEmpty?0:checked/items.length,minHeight:7,color:olive,backgroundColor:cream)),
+    final events=(data['events'] as List).cast<Map<String,dynamic>>();
+    final rows=events.expand((event)=>((event['equipment']??[]) as List).map((item)=>{'event':event,'item':item})).toList();
+    final missing=rows.fold<num>(0,(n,row){final item=row['item'] as Map;return n+(((item['planned'] as num?)??0)-((item['returned'] as num?)??0)-((item['damaged'] as num?)??0)).clamp(0,999999);});
+    final damaged=rows.fold<num>(0,(n,row)=>n+(((row['item'] as Map)['damaged'] as num?)??0));
+    return ListView(padding:EdgeInsets.zero,children:[
+      const PageTitle('Event preparation','Equipment & inventory'),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,mainAxisSpacing:9,crossAxisSpacing:9,childAspectRatio:1.6,children:[
+        _metric('Tracked items',rows.length.toString()),_metric('Missing quantity',missing.toString()),_metric('Damaged quantity',damaged.toString()),_metric('Events',events.where((e)=>((e['equipment']??[]) as List).isNotEmpty).length.toString()),
+      ])),
+      Padding(padding:const EdgeInsets.fromLTRB(18,15,18,28),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        const Text('Equipment by event',style:TextStyle(color:coffee,fontSize:16,fontWeight:FontWeight.w700)),
+        const SizedBox(height:8),
+        if(rows.isEmpty) const Text('Create an event and select its services to generate the equipment checklist.',style:TextStyle(color:muted,fontSize:12,height:1.5)),
+        ...events.where((e)=>((e['equipment']??[]) as List).isNotEmpty).map((event)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Padding(padding:const EdgeInsets.only(top:12,bottom:6),child:Text(event['name']??'Event',style:const TextStyle(color:olive,fontWeight:FontWeight.w800))),
+          ...((event['equipment']??[]) as List).map((raw){final item=raw as Map<String,dynamic>;final planned=(item['planned'] as num?)??0;final returned=(item['returned'] as num?)??0;final damaged=(item['damaged'] as num?)??0;return Padding(padding:const EdgeInsets.symmetric(vertical:7),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text(item['name']??'Item',style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700)),
+            Text(item['category']??'Equipment',style:const TextStyle(color:muted,fontSize:10)),
+            const SizedBox(height:5),
+            Row(children:[Expanded(child:Text('Take: $planned',style:const TextStyle(fontSize:10,color:muted))),Expanded(child:Text('Returned: $returned',style:const TextStyle(fontSize:10,color:muted))),Expanded(child:Text('Damaged: $damaged',style:const TextStyle(fontSize:10,color:muted))),Text('Missing: \${(planned-returned-damaged).clamp(0,999999)}',style:const TextStyle(fontSize:10,color:coffee,fontWeight:FontWeight.w700))]),
+          ]));}),
+          const Divider(height:15),
+        ])),
       ]))),
-      const SizedBox(height:12),
-      Expanded(child:ListView.builder(padding:const EdgeInsets.symmetric(horizontal:18),itemCount:items.length,itemBuilder:(c,i){
-        final item=items[i];return Padding(padding:const EdgeInsets.only(bottom:8),child:panel(child:CheckboxListTile(
-          contentPadding:EdgeInsets.zero,activeColor:olive,value:item['checked']==true,
-          title:Text(item['name'],style:TextStyle(color:coffee,fontWeight:FontWeight.w600,decoration:item['checked']==true?TextDecoration.lineThrough:null)),
-          onChanged:(v){item['checked']=v??false;onSave();},
-        )));
-      })),
+    ]);
+  }
+  Widget _metric(String label,String value)=>panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(value,style:const TextStyle(color:coffee,fontSize:22,fontWeight:FontWeight.w700)),Text(label,style:const TextStyle(color:muted,fontSize:11))]),padding:const EdgeInsets.all(14));
+}
+
+class ExpensesPage extends StatelessWidget {
+  final Map<String,dynamic> data; final ValueChanged<Map<String,dynamic>> onAdd;
+  const ExpensesPage({super.key,required this.data,required this.onAdd});
+  @override Widget build(BuildContext context) {
+    final eventRows=(data['events'] as List).expand((event)=>((event['expenses']??[]) as List).map((expense)=>{'event':event,'expense':expense})).toList();
+    final other=(data['expenses'] as List).map((expense)=>{'event':{'name':'General'},'expense':expense}).toList();
+    final rows=[...eventRows,...other];
+    final total=rows.fold<num>(0,(n,row)=>n+((((row['expense'] as Map)['amount']) as num?)??0));
+    return ListView(padding:EdgeInsets.zero,children:[
+      const PageTitle('Track spending','Expenses'),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        const Text('TOTAL RECORDED EXPENSES',style:TextStyle(color:muted,fontSize:10,letterSpacing:1.3,fontWeight:FontWeight.w700)),
+        const SizedBox(height:7),Text(money(total),style:const TextStyle(color:coffee,fontSize:26,fontWeight:FontWeight.w700)),
+        const SizedBox(height:5),Text('\${rows.length} expense entries',style:const TextStyle(color:muted,fontSize:11)),
+      ]))),
+      Padding(padding:const EdgeInsets.fromLTRB(18,16,18,8),child:const Text('Expense ledger',style:TextStyle(color:coffee,fontSize:17,fontWeight:FontWeight.w700))),
+      Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(children:[
+        if(rows.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('Open an event and add travel, supplies, food or other costs.',style:TextStyle(color:muted,fontSize:12))),
+        ...rows.map((row){final e=row['expense'] as Map;final event=row['event'] as Map;return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[
+          const Icon(Icons.receipt_long_outlined,color:gold,size:19),const SizedBox(width:10),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['title']??e['description']??'Expense',style:const TextStyle(color:coffee,fontWeight:FontWeight.w700,fontSize:12)),Text('\${event['name']} · \${e['category']??'Other'} · \${e['date']??''}',style:const TextStyle(color:muted,fontSize:10))])),
+          Text(money(e['amount']),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800,fontSize:12)),
+        ]));}),
+      ]))),
+      const SizedBox(height:24),
     ]);
   }
 }
