@@ -211,6 +211,55 @@ Widget actionButton(String label, IconData icon, VoidCallback onTap)=>FilledButt
   onPressed:onTap, icon:Icon(icon,size:18), label:Text(label),
   style:FilledButton.styleFrom(backgroundColor:olive,foregroundColor:Colors.white,padding:const EdgeInsets.symmetric(horizontal:17,vertical:13),textStyle:const TextStyle(fontSize:12,fontWeight:FontWeight.w800),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),elevation:0),
 );
+
+class HenaLogoMark extends StatelessWidget {
+  final double size;
+  const HenaLogoMark({super.key, this.size = 42});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFD0B47D), Color(0xFF9B7744)],
+      ),
+      borderRadius: BorderRadius.circular(size * .24),
+      border: Border.all(color: const Color(0xFFE5D2A8), width: 1),
+      boxShadow: [BoxShadow(color: gold.withOpacity(.20), blurRadius: 10, offset: const Offset(0, 3))],
+    ),
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned(
+          top: size * .11,
+          child: Container(
+            width: size * .48,
+            height: size * .18,
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.white.withOpacity(.9), width: 1.4)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(size)),
+            ),
+          ),
+        ),
+        Text('H', style: TextStyle(
+          color: surface,
+          fontFamily: 'Georgia',
+          fontSize: size * .57,
+          height: 1,
+          fontWeight: FontWeight.w700,
+          shadows: const [Shadow(color: Color(0x33000000), blurRadius: 2, offset: Offset(0, 1))],
+        )),
+        Positioned(
+          bottom: size * .13,
+          child: Container(width: size * .35, height: 1, color: const Color(0xFFE9D9B7)),
+        ),
+      ],
+    ),
+  );
+}
+
 String money(dynamic n)=>'₹${(n is num ? n : 0).toStringAsFixed(0)}';
 String today()=>DateTime.now().toIso8601String().substring(0,10);
 
@@ -226,7 +275,7 @@ class DashboardPage extends StatelessWidget {
     final expenses=events.expand((e)=>((e['expenses']??[]) as List)).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0))+(data['expenses'] as List).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0));
     return ListView(padding:EdgeInsets.zero,children:[
       Padding(padding:const EdgeInsets.fromLTRB(20,22,20,18),child:Row(children:[
-        Container(width:38,height:38,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(9)),child:const Center(child:Text('H',style:TextStyle(color:surface,fontFamily:'Georgia',fontSize:23,fontWeight:FontWeight.w700)))),
+        const HenaLogoMark(size:42),
         const SizedBox(width:10),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('HENA',style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:18,fontWeight:FontWeight.w700,letterSpacing:1.5)),Text('CATERING WORKSPACE',style:TextStyle(color:muted,fontSize:8,letterSpacing:1.5,fontWeight:FontWeight.w700))])),
         Text(today(),style:const TextStyle(color:muted,fontSize:10)),
       ])),
