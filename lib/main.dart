@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'event_detail_page.dart';
 
 const coffee = Color(0xFF4B3023);
 const olive = Color(0xFF59613A);
@@ -71,6 +72,7 @@ class MainShell extends StatefulWidget {
 }
 class _MainShellState extends State<MainShell> {
   int tab = 0;
+  String? selectedEventId;
   bool loading = true;
   Map<String, dynamic> data = {};
   @override void initState() { super.initState(); _load(); }
@@ -86,17 +88,22 @@ class _MainShellState extends State<MainShell> {
     (data[key] as List).insert(0, record);
     refresh();
   }
+  void updateEvent(Map<String, dynamic> updated) {
+    final events = data['events'] as List;
+    final index = events.indexWhere((e) => e['id'] == updated['id']);
+    if (index >= 0) { events[index] = updated; refresh(); }
+  }
   @override Widget build(BuildContext context) {
     if (loading) return const Scaffold(body: Center(child:CircularProgressIndicator()));
     final pages = [
       DashboardPage(data:data, onNavigate:(i)=>setState(()=>tab=i)),
-      EventsPage(data:data, onAdd:(r)=>addRecord('events',r)),
+      EventsPage(data:data, onAdd:(r)=>addRecord('events',r), onOpen:(id)=>setState(()=>selectedEventId=id)),
       StaffPage(data:data, onAdd:(r)=>addRecord('staff',r)),
       ExpensesPage(data:data, onAdd:(r)=>addRecord('expenses',r)),
       EquipmentPage(data:data, onSave:refresh),
     ];
     return Scaffold(
-      body: SafeArea(child: IndexedStack(index:tab, children:pages)),
+      body: SafeArea(child: selectedEventId == null ? IndexedStack(index:tab, children:pages) : EventDetailPage(event:(data['events'] as List).cast<Map<String,dynamic>>().firstWhere((e)=>e['id']==selectedEventId), staff:(data['staff'] as List).cast<Map<String,dynamic>>(), onBack:()=>setState(()=>selectedEventId=null), onUpdate:updateEvent)),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -278,8 +285,8 @@ class DashboardPage extends StatelessWidget {
 }
 
 class EventsPage extends StatelessWidget {
-  final Map<String,dynamic> data; final ValueChanged<Map<String,dynamic>> onAdd;
-  const EventsPage({super.key,required this.data,required this.onAdd});
+  final Map<String,dynamic> data; final ValueChanged<Map<String,dynamic>> onAdd; final ValueChanged<String> onOpen;
+  const EventsPage({super.key,required this.data,required this.onAdd,required this.onOpen});
   @override Widget build(BuildContext context) {
     final events=data['events'] as List;
     return Column(children:[
@@ -291,11 +298,11 @@ class EventsPage extends StatelessWidget {
       const SizedBox(height:12),
       Expanded(child:events.isEmpty?_empty(Icons.event_note,'No events yet','Add your first catering event to get started.'):ListView.builder(
         padding:const EdgeInsets.fromLTRB(18,0,18,20),itemCount:events.length,itemBuilder:(c,i){
-          final e=events[i];return Padding(padding:const EdgeInsets.only(bottom:10),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          final e=events[i];return Padding(padding:const EdgeInsets.only(bottom:10),child:InkWell(borderRadius:BorderRadius.circular(22),onTap:()=>onOpen(e['id'].toString()),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
             Row(children:[Expanded(child:Text(e['name']??'Event',style:const TextStyle(color:coffee,fontSize:17,fontWeight:FontWeight.w700))),Text(e['date']??'',style:const TextStyle(color:olive,fontSize:11,fontWeight:FontWeight.w700))]),
             const SizedBox(height:8),Row(children:[const Icon(Icons.location_on_outlined,size:15,color:muted),const SizedBox(width:5),Expanded(child:Text(e['location']??'Location not added',style:const TextStyle(color:muted,fontSize:12)))]),
             if((e['services']??'').toString().isNotEmpty)...[const SizedBox(height:8),Text(e['services'],style:const TextStyle(color:coffee,fontSize:12))],
-          ])));
+          ]))));
         })),
     ]);
   }
