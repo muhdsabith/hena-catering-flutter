@@ -10,7 +10,8 @@ class EventDetailPage extends StatefulWidget {
   final List<Map<String, dynamic>> staff;
   final VoidCallback onBack;
   final ValueChanged<Map<String, dynamic>> onUpdate;
-  const EventDetailPage({super.key, required this.event, required this.staff, required this.onBack, required this.onUpdate});
+  final VoidCallback onDelete;
+  const EventDetailPage({super.key, required this.event, required this.staff, required this.onBack, required this.onUpdate, required this.onDelete});
   @override State<EventDetailPage> createState() => _EventDetailPageState();
 }
 
@@ -30,7 +31,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
   @override Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
     children: [
-      Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back, color: _coffee), label: const Text('All events', style: TextStyle(color: _coffee)))),
+      Row(children: [
+        Expanded(child: Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back, color: _coffee), label: const Text('All events', style: TextStyle(color: _coffee))))),
+        TextButton.icon(onPressed: () async {
+          final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+            title: const Text('Delete event?'),
+            content: const Text('This will delete this event and its records.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+            ],
+          ));
+          if (confirm == true) widget.onDelete();
+        }, icon: const Icon(Icons.delete_outline, color: Colors.redAccent), label: const Text('Delete', style: TextStyle(color: Colors.redAccent))),
+      ]),
       _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text((event['date'] ?? '').toString(), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800, fontSize: 11)),
         const SizedBox(height: 5), Text(event['name'] ?? 'Event', style: const TextStyle(color: _coffee, fontSize: 24, fontWeight: FontWeight.w800)),
