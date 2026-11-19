@@ -88,6 +88,11 @@ class _MainShellState extends State<MainShell> {
     (data[key] as List).insert(0, record);
     refresh();
   }
+  void deleteEvent(String id) {
+    (data['events'] as List).removeWhere((e) => e['id'] == id);
+    selectedEventId = null;
+    refresh();
+  }
   void updateEvent(Map<String, dynamic> updated) {
     final events = data['events'] as List;
     final index = events.indexWhere((e) => e['id'] == updated['id']);
@@ -103,7 +108,7 @@ class _MainShellState extends State<MainShell> {
       EquipmentPage(data:data, onSave:refresh),
     ];
     return Scaffold(
-      body: SafeArea(child: selectedEventId == null ? IndexedStack(index:tab, children:pages) : EventDetailPage(event:(data['events'] as List).cast<Map<String,dynamic>>().firstWhere((e)=>e['id']==selectedEventId), staff:(data['staff'] as List).cast<Map<String,dynamic>>(), onBack:()=>setState(()=>selectedEventId=null), onUpdate:updateEvent)),
+      body: SafeArea(child: selectedEventId == null ? IndexedStack(index:tab, children:pages) : EventDetailPage(event:(data['events'] as List).cast<Map<String,dynamic>>().firstWhere((e)=>e['id']==selectedEventId), staff:(data['staff'] as List).cast<Map<String,dynamic>>(), onBack:()=>setState(()=>selectedEventId=null), onUpdate:updateEvent, onDelete:()=>deleteEvent(selectedEventId!))),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
