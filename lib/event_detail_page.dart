@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-const _coffee = Color(0xFF4B3023);
-const _olive = Color(0xFF59613A);
-const _muted = Color(0xFF8C8176);
-const _cream = Color(0xFFF7F2E9);
+const _coffee = Color(0xFF20251F);
+const _olive = Color(0xFF244438);
+const _muted = Color(0xFF77786F);
+const _cream = Color(0xFFF5F3ED);
+const _gold = Color(0xFFB6945A);
+const _surface = Color(0xFFFFFEFA);
 
 class EventDetailPage extends StatefulWidget {
   final Map<String, dynamic> event;
@@ -62,7 +64,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.location_on_outlined, size: 16, color: _muted), const SizedBox(width: 5), Expanded(child: Text(event['location'] ?? 'Location not added', style: const TextStyle(color: _muted, fontSize: 12)))]),
         if ((event['services'] ?? '').toString().isNotEmpty) ...[
           const SizedBox(height: 12),
-          Wrap(spacing: 6, runSpacing: 6, children: (event['services'] as String).split(', ').map((service) => Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: _olive.withOpacity(.09), borderRadius: BorderRadius.circular(30)), child: Text(service, style: const TextStyle(color: _olive, fontSize: 10, fontWeight: FontWeight.w700)))).toList()),
+          Wrap(spacing: 6, runSpacing: 6, children: (event['services'] as String).split(', ').map((service) => Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: _olive.withOpacity(.09), borderRadius: BorderRadius.circular(8)), child: Text(service, style: const TextStyle(color: _olive, fontSize: 10, fontWeight: FontWeight.w700)))).toList()),
         ],
         if ((event['notes'] ?? '').toString().trim().isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -105,9 +107,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFEFE9E1), width: .8),
+      color: _surface,
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: const Color(0xFFE8E3D8), width: .8),
       boxShadow: [BoxShadow(color: _coffee.withOpacity(.035), blurRadius: 14, offset: const Offset(0, 4))],
     ),
     child: child,
@@ -155,7 +157,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
     String? staffId; String role = roles.first;
     final wage = TextEditingController(); final work = TextEditingController();
     await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx,setD) => AlertDialog(
-      backgroundColor: _cream, title: const Text('Assign staff', style: TextStyle(color: _coffee)),
+      backgroundColor: _surface, title: const Text('Assign staff', style: TextStyle(color: _coffee)),
       content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
         DropdownButtonFormField<String>(value: staffId, decoration: const InputDecoration(labelText: 'Staff member'), items: widget.staff.map((p) => DropdownMenuItem(value: p['id'].toString(), child: Text(p['name'] ?? ''))).toList(), onChanged: (v) => setD(() => staffId = v)),
         const SizedBox(height: 8), DropdownButtonFormField<String>(value: role, decoration: const InputDecoration(labelText: 'Event role'), items: roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(), onChanged: (v) => setD(() => role = v ?? roles.first)),
