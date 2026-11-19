@@ -15,6 +15,14 @@ jobs:
           channel: stable
       - name: Generate Android project files
         run: flutter create --platforms=android --org com.hena .
+      - name: Apply HENA launcher icon
+        run: |
+          mkdir -p android/app/src/main/res/drawable
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          cp android_icon/hena_icon_foreground.xml android/app/src/main/res/drawable/hena_icon_foreground.xml
+          cp android_icon/colors.xml android/app/src/main/res/values/hena_icon_colors.xml
+          cp android_icon/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
