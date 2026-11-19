@@ -236,7 +236,7 @@ class DashboardPage extends StatelessWidget {
         const SizedBox(height:4),const Text('Here is the overview of your catering operations.',style:TextStyle(color:muted,fontSize:11)),
       ])),
       Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,mainAxisSpacing:9,crossAxisSpacing:9,childAspectRatio:1.65,children:[
-        _metric('Total events',events.length.toString(),'\${upcoming.length} upcoming'),
+        _metric('Total events',events.length.toString(),'${upcoming.length} upcoming'),
         _metric('Upcoming events',upcoming.length.toString(),'Scheduled jobs'),
         _metric('Staff wages',money(wages),'Recorded attendance'),
         _metric('Other expenses',money(expenses),'Across all events'),
@@ -252,7 +252,7 @@ class DashboardPage extends StatelessWidget {
       Padding(padding:const EdgeInsets.fromLTRB(20,20,20,10),child:const Text("Today's work",style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:17,fontWeight:FontWeight.w700))),
       Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         if(todayEvents.isEmpty) const Text("Nothing on today's schedule.",style:TextStyle(color:muted,fontSize:11)),
-        ...todayEvents.map((e)=>Padding(padding:const EdgeInsets.symmetric(vertical:7),child:Row(children:[Container(width:3,height:34,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(2))),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700)),Text('\${e['time']??''} · \${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))]))]))),
+        ...todayEvents.map((e)=>Padding(padding:const EdgeInsets.symmetric(vertical:7),child:Row(children:[Container(width:3,height:34,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(2))),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700)),Text('${e['time']??''} · ${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))]))]))),
       ]))),
       Padding(padding:const EdgeInsets.fromLTRB(20,20,20,10),child:const Text('Operating costs',style:TextStyle(color:coffee,fontFamily:'Georgia',fontSize:17,fontWeight:FontWeight.w700))),
       Padding(padding:const EdgeInsets.fromLTRB(18,0,18,25),child:panel(child:Column(children:[
@@ -343,7 +343,7 @@ class EquipmentPage extends StatelessWidget {
             Text(item['name']??'Item',style:const TextStyle(color:coffee,fontSize:12,fontWeight:FontWeight.w700)),
             Text(item['category']??'Equipment',style:const TextStyle(color:muted,fontSize:10)),
             const SizedBox(height:5),
-            Row(children:[Expanded(child:Text('Take: $planned',style:const TextStyle(fontSize:10,color:muted))),Expanded(child:Text('Returned: $returned',style:const TextStyle(fontSize:10,color:muted))),Expanded(child:Text('Damaged: $damaged',style:const TextStyle(fontSize:10,color:muted))),Text('Missing: \${(planned-returned-damaged).clamp(0,999999)}',style:const TextStyle(fontSize:10,color:coffee,fontWeight:FontWeight.w700))]),
+            Row(children:[Expanded(child:Text('Take: $planned',style:const TextStyle(fontSize:10,color:muted))),Expanded(child:Text('Returned: $returned',style:const TextStyle(fontSize:10,color:muted))),Expanded(child:Text('Damaged: $damaged',style:const TextStyle(fontSize:10,color:muted))),Text('Missing: ${(planned-returned-damaged).clamp(0,999999)}',style:const TextStyle(fontSize:10,color:coffee,fontWeight:FontWeight.w700))]),
           ]));}),
           const Divider(height:15),
         ])),
@@ -366,14 +366,14 @@ class ExpensesPage extends StatelessWidget {
       Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         const Text('TOTAL RECORDED EXPENSES',style:TextStyle(color:muted,fontSize:10,letterSpacing:1.3,fontWeight:FontWeight.w700)),
         const SizedBox(height:7),Text(money(total),style:const TextStyle(color:coffee,fontSize:26,fontWeight:FontWeight.w700)),
-        const SizedBox(height:5),Text('\${rows.length} expense entries',style:const TextStyle(color:muted,fontSize:11)),
+        const SizedBox(height:5),Text('${rows.length} expense entries',style:const TextStyle(color:muted,fontSize:11)),
       ]))),
       Padding(padding:const EdgeInsets.fromLTRB(18,16,18,8),child:const Text('Expense ledger',style:TextStyle(color:coffee,fontSize:17,fontWeight:FontWeight.w700))),
       Padding(padding:const EdgeInsets.symmetric(horizontal:18),child:panel(child:Column(children:[
         if(rows.isEmpty) const Padding(padding:EdgeInsets.all(18),child:Text('Open an event and add travel, supplies, food or other costs.',style:TextStyle(color:muted,fontSize:12))),
         ...rows.map((row){final e=row['expense'] as Map;final event=row['event'] as Map;return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[
           const Icon(Icons.receipt_long_outlined,color:gold,size:19),const SizedBox(width:10),
-          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['title']??e['description']??'Expense',style:const TextStyle(color:coffee,fontWeight:FontWeight.w700,fontSize:12)),Text('\${event['name']} · \${e['category']??'Other'} · \${e['date']??''}',style:const TextStyle(color:muted,fontSize:10))])),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['title']??e['description']??'Expense',style:const TextStyle(color:coffee,fontWeight:FontWeight.w700,fontSize:12)),Text('${event['name']} · ${e['category']??'Other'} · ${e['date']??''}',style:const TextStyle(color:muted,fontSize:10))])),
           Text(money(e['amount']),style:const TextStyle(color:coffee,fontWeight:FontWeight.w800,fontSize:12)),
         ]));}),
       ]))),
@@ -489,7 +489,7 @@ class ReportsPage extends StatelessWidget {
       Padding(padding:const EdgeInsets.fromLTRB(18,10,18,24),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         const Text('Cost per event',style:TextStyle(fontSize:16,fontWeight:FontWeight.w700,color:coffee)),
         const SizedBox(height:8),
-        ...events.map((e){final w=((e['staffAssignments']??[]) as List).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));final x=((e['expenses']??[]) as List).fold<num>(0,(n,a)=>n+((a['amount'] as num?)??0));return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(fontWeight:FontWeight.w700,color:coffee)),Text('\${e['date']??''} · \${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))])),Text(money(w+x),style:const TextStyle(fontWeight:FontWeight.w800,color:olive))]));}),
+        ...events.map((e){final w=((e['staffAssignments']??[]) as List).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));final x=((e['expenses']??[]) as List).fold<num>(0,(n,a)=>n+((a['amount'] as num?)??0));return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(fontWeight:FontWeight.w700,color:coffee)),Text('${e['date']??''} · ${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))])),Text(money(w+x),style:const TextStyle(fontWeight:FontWeight.w800,color:olive))]));}),
         if(events.isEmpty) const Text('Create events to start building reports.',style:TextStyle(color:muted,fontSize:12)),
       ]))),
     ]);
