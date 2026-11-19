@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+
+const _coffee = Color(0xFF4B3023);
+const _olive = Color(0xFF59613A);
+const _muted = Color(0xFF8C8176);
+const _cream = Color(0xFFF7F2E9);
+
+class EventDetailPage extends StatefulWidget {
+  final Map<String, dynamic> event;
+  final List<Map<String, dynamic>> staff;
+  final VoidCallback onBack;
+  final ValueChanged<Map<String, dynamic>> onUpdate;
+  const EventDetailPage({super.key, required this.event, required this.staff, required this.onBack, required this.onUpdate});
+  @override State<EventDetailPage> createState() => _EventDetailPageState();
+}
+
+class _EventDetailPageState extends State<EventDetailPage> {
+  static const roles = ['Juicier','Samavar tea maker','Samavar helper','Herbal tea maker','Popcorn and Cotton Candy maker','Snack maker','Boys','Juice helper'];
+  static const categories = ['Staff','Supplies','Travel','Fuel','Food','Equipment','Other'];
+  late Map<String,dynamic> event;
+  @override void initState() { super.initState(); event = Map<String,dynamic>.from(widget.event); event.putIfAbsent('staffAssignments', () => []); event.putIfAbsent('expenses', () => []); event.putIfAbsent('equipment', () => []); }
+  List<Map<String,dynamic>> get assignments => (event['staffAssignments'] as List).cast<Map<String,dynamic>>();
+  List<Map<String,dynamic>> get expenses => (event['expenses'] as List).cast<Map<String,dynamic>>();
+  List<Map<String,dynamic>> get equipment => (event['equipment'] as List).cast<Map<String,dynamic>>();
+  void patch(String key, dynamic value) { setState(() => event[key] = value); widget.onUpdate(event); }
+  String money(dynamic n) => '₹' + ((n is num ? n : 0).toStringAsFixed(0));
+  num get wageTotal => assignments.where((a) => a['attended'] == true).fold<num>(0, (n,a) => n + ((a['wage'] as num?) ?? 0));
+  num get expenseTotal => expenses.fold<num>(0, (n,e) => n + ((e['amount'] as num?) ?? 0));
+
+  @override Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
+    children: [
+      Align(alignment: Alignment.centerLeft, child: TextButton.icon(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back, color: _coffee), label: const Text('All events', style: TextStyle(color: _coffee)))),
+      _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text((event['date'] ?? '').toString(), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800, fontSize: 11)),
+        const SizedBox(height: 5), Text(event['name'] ?? 'Event', style: const TextStyle(color: _coffee, fontSize: 24, fontWeight: FontWeight.w800)),
+        Text(event['location'] ?? 'Location not added', style: const TextStyle(color: _muted)),
+        if ((event['services'] ?? '').toString().isNotEmpty) Text(event['services'], style: const TextStyle(color: _olive, fontSize: 12)),
+      ])),
+      const SizedBox(height: 12),
+      Row(children: [
+        Expanded(child: _metric('Staff present', assignments.where((a) => a['attended'] == true).length.toString())),
+        const SizedBox(width: 8), Expanded(child: _metric('Staff wages', money(wageTotal))),
+        const SizedBox(width: 8), Expanded(child: _metric('Expenses', money(expenseTotal))),
+      ]),
+      const SizedBox(height: 20),
+      _heading('Staff & wages', 'Assign staff, roles, attendance and payments'),
+      if (assignments.isEmpty) const Text('No staff assigned yet.', style: TextStyle(color: _muted)),
+      ...assignments.map(_assignmentTile),
+      const SizedBox(height: 8),
+      _action('Assign staff', Icons.person_add_alt_1, _addAssignment),
+      const SizedBox(height: 20),
+      _heading('Equipment checklist', 'Track taken, returned, damaged and missing'),
+      if (equipment.isEmpty) const Text('No equipment items. Select services when creating the event.', style: TextStyle(color: _muted)),
+      ...equipment.map(_equipmentTile),
+      const SizedBox(height: 20),
+      _heading('Event expenses', 'Staff, supplies, travel, fuel, food and other costs'),
+      if (expenses.isEmpty) const Text('No event expenses recorded.', style: TextStyle(color: _muted)),
+      ...expenses.map((e) => _panel(Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(e['title'] ?? 'Expense', style: const TextStyle(color: _coffee, fontWeight: FontWeight.w700)),
+          Text((e['category'] ?? 'Other').toString() + ' · ' + (e['date'] ?? '').toString(), style: const TextStyle(color: _muted, fontSize: 11)),
+        ])),
+        Text(money(e['amount']), style: const TextStyle(color: _coffee, fontWeight: FontWeight.w800)),
+        IconButton(onPressed: () => patch('expenses', expenses.where((x) => x['id'] != e['id']).toList()), icon: const Icon(Icons.close, color: _muted)),
+      ]))),
+      const SizedBox(height: 8),
+      _action('Add expense', Icons.add, _addExpense),
+    ],
+  );
+
+  Widget _panel(Widget child) => Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)), child: child);
+  Widget _metric(String label, String value) => _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: _coffee, fontWeight: FontWeight.w800, fontSize: 16)), Text(label, style: const TextStyle(color: _muted, fontSize: 10))]));
+  Widget _heading(String title, String subtitle) => Padding(padding: const EdgeInsets.only(bottom: 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: _coffee, fontSize: 18, fontWeight: FontWeight.w800)), Text(subtitle, style: const TextStyle(color: _muted, fontSize: 10))]));
+  Widget _action(String label, IconData icon, VoidCallback onTap) => SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: onTap, icon: Icon(icon, color: _olive), label: Text(label, style: const TextStyle(color: _olive)), style: OutlinedButton.styleFrom(side: const BorderSide(color: _olive), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), padding: const EdgeInsets.all(13))));
+  Widget _assignmentTile(Map<String,dynamic> a) {
+    final person = widget.staff.firstWhere((p) => p['id'] == a['staffId'], orElse: () => {'name':'Removed staff'});
+    final wage = (a['wage'] as num?) ?? 0;
+    final advance = (a['advance'] as num?) ?? 0;
+    return _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [Expanded(child: Text(person['name'] ?? 'Staff', style: const TextStyle(color: _coffee, fontWeight: FontWeight.w800))), IconButton(onPressed: () => patch('staffAssignments', assignments.where((x) => x['id'] != a['id']).toList()), icon: const Icon(Icons.close, color: _muted))]),
+      Text(a['role'] ?? 'Role not selected', style: const TextStyle(color: _olive, fontSize: 12, fontWeight: FontWeight.w700)),
+      if ((a['work'] ?? '').toString().isNotEmpty) Text('Work: ' + a['work'].toString(), style: const TextStyle(color: _muted, fontSize: 11)),
+      SwitchListTile(contentPadding: EdgeInsets.zero, activeColor: _olive, title: const Text('Present', style: TextStyle(color: _coffee, fontSize: 12)), value: a['attended'] == true, onChanged: (v) => patch('staffAssignments', assignments.map((x) => x['id'] == a['id'] ? {...x,'attended':v} : x).toList())),
+      Row(children: [
+        Expanded(child: _editNumber('Wage ₹', wage, (v) => _patchAssignment(a,'wage',v))),
+        const SizedBox(width: 8), Expanded(child: _editNumber('Advance ₹', advance, (v) => _patchAssignment(a,'advance',v))),
+      ]),
+      Align(alignment: Alignment.centerRight, child: Text('Balance: ' + money(wage - advance), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800))),
+    ]));
+  }
+  Widget _editNumber(String label, num value, ValueChanged<num> changed) => TextFormField(initialValue: value.toString(), keyboardType: TextInputType.number, decoration: InputDecoration(labelText: label, isDense: true), onChanged: (v) { final n = num.tryParse(v); if (n != null) changed(n); });
+  void _patchAssignment(Map<String,dynamic> a, String key, num value) => patch('staffAssignments', assignments.map((x) => x['id'] == a['id'] ? {...x,key:value} : x).toList());
+  Widget _equipmentTile(Map<String,dynamic> item) {
+    final planned = (item['planned'] as num?) ?? 0;
+    final returned = (item['returned'] as num?) ?? 0;
+    final damaged = (item['damaged'] as num?) ?? 0;
+    return _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(item['name'] ?? 'Equipment', style: const TextStyle(color: _coffee, fontWeight: FontWeight.w700)),
+      Text(item['category'] ?? 'Equipment', style: const TextStyle(color: _muted, fontSize: 10)),
+      Row(children: [
+        Expanded(child: _editNumber('Take', planned, (v) => _patchEquipment(item,'planned',v))),
+        const SizedBox(width: 7), Expanded(child: _editNumber('Returned', returned, (v) => _patchEquipment(item,'returned',v))),
+        const SizedBox(width: 7), Expanded(child: _editNumber('Damaged', damaged, (v) => _patchEquipment(item,'damaged',v))),
+      ]),
+      Align(alignment: Alignment.centerRight, child: Text('Missing: ' + (planned - returned - damaged).clamp(0,999999).toString(), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800))),
+    ]));
+  }
+  void _patchEquipment(Map<String,dynamic> item, String key, num value) => patch('equipment', equipment.map((x) => x['id'] == item['id'] ? {...x,key:value} : x).toList());
+
+  Future<void> _addAssignment() async {
+    if (widget.staff.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add staff members first.'))); return; }
+    String? staffId; String role = roles.first;
+    final wage = TextEditingController(); final work = TextEditingController();
+    await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx,setD) => AlertDialog(
+      backgroundColor: _cream, title: const Text('Assign staff', style: TextStyle(color: _coffee)),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        DropdownButtonFormField<String>(value: staffId, decoration: const InputDecoration(labelText: 'Staff member'), items: widget.staff.map((p) => DropdownMenuItem(value: p['id'].toString(), child: Text(p['name'] ?? ''))).toList(), onChanged: (v) => setD(() => staffId = v)),
+        const SizedBox(height: 8), DropdownButtonFormField<String>(value: role, decoration: const InputDecoration(labelText: 'Event role'), items: roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(), onChanged: (v) => setD(() => role = v ?? roles.first)),
+        const SizedBox(height: 8), TextField(controller: wage, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Wage ₹')),
+        const SizedBox(height: 8), TextField(controller: work, decoration: const InputDecoration(labelText: 'Work done')),
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), FilledButton(onPressed: () { final n = num.tryParse(wage.text); if (staffId == null || n == null) return; patch('staffAssignments', [...assignments, {'id':DateTime.now().microsecondsSinceEpoch.toString(),'staffId':staffId,'role':role,'wage':n,'advance':0,'work':work.text.trim(),'attended':true}]); Navigator.pop(ctx); }, child: const Text('Assign'))],
+    )));
+  }
+  Future<void> _addExpense() async {
+    final title = TextEditingController(); final amount = TextEditingController();
+    String category = 'Staff'; String? staffId;
+    await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx,setD) => AlertDialog(
+      backgroundColor: _cream, title: const Text('Add event expense', style: TextStyle(color: _coffee)),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        DropdownButtonFormField<String>(value: category, decoration: const InputDecoration(labelText: 'Category'), items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(), onChanged: (v) => setD(() => category = v ?? 'Other')),
+        const SizedBox(height: 8), TextField(controller: title, decoration: const InputDecoration(labelText: 'Description')),
+        const SizedBox(height: 8), TextField(controller: amount, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount ₹')),
+        if (widget.staff.isNotEmpty && category == 'Staff') ...[
+          const SizedBox(height: 8), DropdownButtonFormField<String>(value: staffId, decoration: const InputDecoration(labelText: 'Staff (optional)'), items: widget.staff.map((p) => DropdownMenuItem(value: p['id'].toString(), child: Text(p['name'] ?? ''))).toList(), onChanged: (v) => setD(() => staffId = v)),
+        ],
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), FilledButton(onPressed: () { final n = num.tryParse(amount.text); if (title.text.trim().isEmpty || n == null) return; patch('expenses', [...expenses, {'id':DateTime.now().microsecondsSinceEpoch.toString(),'title':title.text.trim(),'category':category,'amount':n,'date':DateTime.now().toIso8601String().substring(0,10),'staffId':staffId}]); Navigator.pop(ctx); }, child: const Text('Save'))],
+    )));
+  }
+}
