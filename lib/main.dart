@@ -94,19 +94,59 @@ class _MainShellState extends State<MainShell> {
     ];
     return Scaffold(
       body: SafeArea(child: IndexedStack(index:tab, children:pages)),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex:tab, onDestinationSelected:(i)=>setState(()=>tab=i),
-        backgroundColor:Colors.white, indicatorColor:olive.withOpacity(.13),
-        destinations: const [
-          NavigationDestination(icon:Icon(Icons.grid_view_rounded),label:'Home'),
-          NavigationDestination(icon:Icon(Icons.event_note_rounded),label:'Events'),
-          NavigationDestination(icon:Icon(Icons.groups_rounded),label:'Staff'),
-          NavigationDestination(icon:Icon(Icons.receipt_long_rounded),label:'Expenses'),
-          NavigationDestination(icon:Icon(Icons.inventory_2_rounded),label:'Equipment'),
-        ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 62,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xFFEDE8E0), width: 0.7)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+              _navItem(1, Icons.calendar_month_outlined, Icons.calendar_month_rounded, 'Events'),
+              _navItem(2, Icons.people_outline_rounded, Icons.people_rounded, 'Staff'),
+              _navItem(3, Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Expenses'),
+              _navItem(4, Icons.inventory_2_outlined, Icons.inventory_2_rounded, 'Equipment'),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  Widget _navItem(int index, IconData outline, IconData filled, String label) {
+    final selected = tab == index;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          onTap: () => setState(() => tab = index),
+          child: SizedBox(
+            height: 62,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(selected ? filled : outline, size: 25, color: selected ? coffee : muted),
+                const SizedBox(height: 3),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: selected ? 4 : 0,
+                  height: 4,
+                  decoration: const BoxDecoration(color: olive, shape: BoxShape.circle),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 }
 
 class PageTitle extends StatelessWidget {
