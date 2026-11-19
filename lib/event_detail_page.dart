@@ -46,10 +46,28 @@ class _EventDetailPageState extends State<EventDetailPage> {
         }, icon: const Icon(Icons.delete_outline, color: Colors.redAccent), label: const Text('Delete', style: TextStyle(color: Colors.redAccent))),
       ]),
       _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text((event['date'] ?? '').toString(), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800, fontSize: 11)),
+        Row(children: [
+          const Icon(Icons.calendar_today_outlined, size: 14, color: _olive),
+          const SizedBox(width: 7),
+          Text((event['date'] ?? '').toString(), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800, fontSize: 11)),
+          if ((event['time'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(width: 12),
+            const Icon(Icons.schedule_rounded, size: 14, color: _olive),
+            const SizedBox(width: 5),
+            Text(event['time'].toString(), style: const TextStyle(color: _olive, fontWeight: FontWeight.w700, fontSize: 11)),
+          ],
+        ]),
         const SizedBox(height: 5), Text(event['name'] ?? 'Event', style: const TextStyle(color: _coffee, fontSize: 24, fontWeight: FontWeight.w800)),
-        Text(event['location'] ?? 'Location not added', style: const TextStyle(color: _muted)),
-        if ((event['services'] ?? '').toString().isNotEmpty) Text(event['services'], style: const TextStyle(color: _olive, fontSize: 12)),
+        const SizedBox(height: 5),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.location_on_outlined, size: 16, color: _muted), const SizedBox(width: 5), Expanded(child: Text(event['location'] ?? 'Location not added', style: const TextStyle(color: _muted, fontSize: 12)))]),
+        if ((event['services'] ?? '').toString().isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(spacing: 6, runSpacing: 6, children: (event['services'] as String).split(', ').map((service) => Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: _olive.withOpacity(.09), borderRadius: BorderRadius.circular(30)), child: Text(service, style: const TextStyle(color: _olive, fontSize: 10, fontWeight: FontWeight.w700)))).toList()),
+        ],
+        if ((event['notes'] ?? '').toString().trim().isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: _cream, borderRadius: BorderRadius.circular(14)), child: Text(event['notes'].toString(), style: const TextStyle(color: _coffee, fontSize: 12, height: 1.45))),
+        ],
       ])),
       const SizedBox(height: 12),
       Row(children: [
@@ -83,9 +101,19 @@ class _EventDetailPageState extends State<EventDetailPage> {
     ],
   );
 
-  Widget _panel(Widget child) => Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)), child: child);
-  Widget _metric(String label, String value) => _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: _coffee, fontWeight: FontWeight.w800, fontSize: 16)), Text(label, style: const TextStyle(color: _muted, fontSize: 10))]));
-  Widget _heading(String title, String subtitle) => Padding(padding: const EdgeInsets.only(bottom: 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: _coffee, fontSize: 18, fontWeight: FontWeight.w800)), Text(subtitle, style: const TextStyle(color: _muted, fontSize: 10))]));
+  Widget _panel(Widget child) => Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFEFE9E1), width: .8),
+      boxShadow: [BoxShadow(color: _coffee.withOpacity(.035), blurRadius: 14, offset: const Offset(0, 4))],
+    ),
+    child: child,
+  );
+  Widget _metric(String label, String value) => _panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: _coffee, fontWeight: FontWeight.w800, fontSize: 16)), Text(label, style: const TextStyle(color: _muted, fontSize: 10, height: 1.35))]));
+  Widget _heading(String title, String subtitle) => Padding(padding: const EdgeInsets.only(bottom: 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: _coffee, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -.3)), const SizedBox(height: 3), Text(subtitle, style: const TextStyle(color: _muted, fontSize: 11, height: 1.4))]));
   Widget _action(String label, IconData icon, VoidCallback onTap) => SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: onTap, icon: Icon(icon, color: _olive), label: Text(label, style: const TextStyle(color: _olive)), style: OutlinedButton.styleFrom(side: const BorderSide(color: _olive), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), padding: const EdgeInsets.all(13))));
   Widget _assignmentTile(Map<String,dynamic> a) {
     final person = widget.staff.firstWhere((p) => p['id'] == a['staffId'], orElse: () => {'name':'Removed staff'});
