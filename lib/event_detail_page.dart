@@ -27,7 +27,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
   List<Map<String,dynamic>> get equipment => (event['equipment'] as List).cast<Map<String,dynamic>>();
   void patch(String key, dynamic value) { setState(() => event[key] = value); widget.onUpdate(event); }
   String money(dynamic n) => '₹' + ((n is num ? n : 0).toStringAsFixed(0));
-  num get wageTotal => assignments.where((a) => a['attended'] == true).fold<num>(0, (n,a) => n + ((a['wage'] as num?) ?? 0));
+  num get wageTotal => assignments.where((a) => a['attended'] == true && (a['workCompleted'] == true || (a['workCompleted'] == null && ((a['wage'] as num?) ?? 0) > 0))).fold<num>(0, (n,a) => n + ((a['wage'] as num?) ?? 0));
   num get expenseTotal => expenses.fold<num>(0, (n,e) => n + ((e['amount'] as num?) ?? 0));
 
   @override Widget build(BuildContext context) => ListView(
