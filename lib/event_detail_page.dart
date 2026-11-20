@@ -126,15 +126,52 @@ class _EventDetailPageState extends State<EventDetailPage> {
       Text(a['role'] ?? 'Role not selected', style: const TextStyle(color: _olive, fontSize: 12, fontWeight: FontWeight.w700)),
       if ((a['work'] ?? '').toString().isNotEmpty) Text('Work: ' + a['work'].toString(), style: const TextStyle(color: _muted, fontSize: 11)),
       SwitchListTile(contentPadding: EdgeInsets.zero, activeColor: _olive, title: const Text('Present', style: TextStyle(color: _coffee, fontSize: 12)), value: a['attended'] == true, onChanged: (v) => patch('staffAssignments', assignments.map((x) => x['id'] == a['id'] ? {...x,'attended':v} : x).toList())),
-      Row(children: [
-        Expanded(child: _editNumber('Wage ₹', wage, (v) => _patchAssignment(a,'wage',v))),
-        const SizedBox(width: 8), Expanded(child: _editNumber('Advance ₹', advance, (v) => _patchAssignment(a,'advance',v))),
-      ]),
-      Align(alignment: Alignment.centerRight, child: Text('Balance: ' + money(wage - advance), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800))),
+      if (a['workCompleted'] == true || (a['workCompleted'] == null && wage > 0)) ...[
+        Row(children: [
+          Expanded(child: _editNumber('Final wage ₹', wage, (v) => _patchAssignment(a,'wage',v))),
+          const SizedBox(width: 8), Expanded(child: _editNumber('Advance ₹', advance, (v) => _patchAssignment(a,'advance',v))),
+        ]),
+        Align(alignment: Alignment.centerRight, child: Text('Balance: ' + money(wage - advance), style: const TextStyle(color: _olive, fontWeight: FontWeight.w800))),
+        Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: () => _completeAssignment(a), icon: const Icon(Icons.edit_outlined, size: 16), label: const Text('Update final payment'))),
+      ] else ...[
+        SizedBox(width: double.infinity, child: OutlinedButton.icon(
+          onPressed: () => _completeAssignment(a),
+          icon: const Icon(Icons.task_alt, size: 18),
+          label: const Text('Mark work completed & add wage'),
+          style: OutlinedButton.styleFrom(foregroundColor: _olive, side: const BorderSide(color: _olive)),
+        )),
+      ],
     ]));
   }
   Widget _editNumber(String label, num value, ValueChanged<num> changed) => TextFormField(initialValue: value.toString(), keyboardType: TextInputType.number, decoration: InputDecoration(labelText: label, isDense: true), onChanged: (v) { final n = num.tryParse(v); if (n != null) changed(n); });
   void _patchAssignment(Map<String,dynamic> a, String key, num value) => patch('staffAssignments', assignments.map((x) => x['id'] == a['id'] ? {...x,key:value} : x).toList());
+  Future<void> _completeAssignment(Map<String,dynamic> assignment) async {
+    final wage = TextEditingController(text: ((assignment['wage'] as num?) ?? 0).toString());
+    final advance = TextEditingController(text: ((assignment['advance'] as num?) ?? 0).toString());
+    final result = await showDialog<List<num>>(context: context, builder: (ctx) => AlertDialog(
+      backgroundColor: _surface,
+      title: const Text('Work completed', style: TextStyle(color: _coffee)),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Text('Enter the final wage and any advance already paid.', style: TextStyle(color: _muted, fontSize: 12)),
+        const SizedBox(height: 12),
+        TextField(controller: wage, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Final wage ₹')),
+        const SizedBox(height: 8),
+        TextField(controller: advance, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Advance paid ₹')),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        FilledButton(onPressed: () {
+          final w = num.tryParse(wage.text.trim());
+          final a = num.tryParse(advance.text.trim());
+          if (w == null || a == null || w < 0 || a < 0) return;
+          Navigator.pop(ctx, [w, a]);
+        }, child: const Text('Save payment')),
+      ],
+    ));
+    if (result == null) return;
+    patch('staffAssignments', assignments.map((x) => x['id'] == assignment['id'] ? {...x, 'workCompleted': true, 'wage': result[0], 'advance': result[1]} : x).toList());
+  }
+
   Widget _equipmentTile(Map<String,dynamic> item) {
     final planned = (item['planned'] as num?) ?? 0;
     final returned = (item['returned'] as num?) ?? 0;
@@ -155,16 +192,15 @@ class _EventDetailPageState extends State<EventDetailPage> {
   Future<void> _addAssignment() async {
     if (widget.staff.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add staff members first.'))); return; }
     String? staffId; String role = roles.first;
-    final wage = TextEditingController(); final work = TextEditingController();
+    final work = TextEditingController();
     await showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx,setD) => AlertDialog(
       backgroundColor: _surface, title: const Text('Assign staff', style: TextStyle(color: _coffee)),
       content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
         DropdownButtonFormField<String>(value: staffId, decoration: const InputDecoration(labelText: 'Staff member'), items: widget.staff.map((p) => DropdownMenuItem(value: p['id'].toString(), child: Text(p['name'] ?? ''))).toList(), onChanged: (v) => setD(() => staffId = v)),
         const SizedBox(height: 8), DropdownButtonFormField<String>(value: role, decoration: const InputDecoration(labelText: 'Event role'), items: roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(), onChanged: (v) => setD(() => role = v ?? roles.first)),
-        const SizedBox(height: 8), TextField(controller: wage, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Wage ₹')),
-        const SizedBox(height: 8), TextField(controller: work, decoration: const InputDecoration(labelText: 'Work done')),
+        const SizedBox(height: 8), TextField(controller: work, decoration: const InputDecoration(labelText: 'Work / duty assigned')),
       ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), FilledButton(onPressed: () { final n = num.tryParse(wage.text); if (staffId == null || n == null) return; patch('staffAssignments', [...assignments, {'id':DateTime.now().microsecondsSinceEpoch.toString(),'staffId':staffId,'role':role,'wage':n,'advance':0,'work':work.text.trim(),'attended':true}]); Navigator.pop(ctx); }, child: const Text('Assign'))],
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), FilledButton(onPressed: () { if (staffId == null) return; patch('staffAssignments', [...assignments, {'id':DateTime.now().microsecondsSinceEpoch.toString(),'staffId':staffId,'role':role,'wage':0,'advance':0,'work':work.text.trim(),'attended':true,'workCompleted':false}]); Navigator.pop(ctx); }, child: const Text('Assign'))],
     )));
   }
   Future<void> _addExpense() async {
