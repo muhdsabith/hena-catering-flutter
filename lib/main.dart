@@ -293,7 +293,7 @@ class DashboardPage extends StatelessWidget {
     final staff=data['staff'] as List;
     final upcoming=events.where((e)=>(e['date']??'').toString().compareTo(today())>=0).toList()..sort((a,b)=>(a['date']??'').toString().compareTo((b['date']??'').toString()));
     final todayEvents=upcoming.where((e)=>e['date']==today()).toList();
-    final wages=events.expand((e)=>((e['staffAssignments']??[]) as List)).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));
+    final wages=events.expand((e)=>((e['staffAssignments']??[]) as List)).where((a)=>a['attended']==true && (a['workCompleted']==true || (a['workCompleted']==null && ((a['wage'] as num?)??0)>0))).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));
     final expenses=events.expand((e)=>((e['expenses']??[]) as List)).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0))+(data['expenses'] as List).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0));
     return ListView(padding:EdgeInsets.zero,children:[
       Padding(padding:const EdgeInsets.fromLTRB(20,22,20,18),child:Row(children:[
@@ -376,7 +376,7 @@ class StaffPage extends StatelessWidget {
         padding:const EdgeInsets.symmetric(horizontal:18),itemCount:staff.length,itemBuilder:(c,i){
           final personId=staff[i]['id'];
           final assignments=(data['events'] as List).expand((event)=>((event['staffAssignments']??[]) as List)).where((a)=>a['staffId']==personId).toList();
-          final wages=assignments.where((a)=>a['attended']==true).fold<num>(0,(sum,a)=>sum+((a['wage'] as num?)??0));
+          final wages=assignments.where((a)=>a['attended']==true && (a['workCompleted']==true || (a['workCompleted']==null && ((a['wage'] as num?)??0)>0))).fold<num>(0,(sum,a)=>sum+((a['wage'] as num?)??0));
           final roles=assignments.map((a)=>a['role']).where((r)=>r!=null).toSet().join(', ');
           return Padding(padding:const EdgeInsets.only(bottom:9),child:panel(child:Row(children:[
             CircleAvatar(backgroundColor:olive.withOpacity(.13),child:Text((staff[i]['name']??'?').toString().substring(0,1).toUpperCase(),style:const TextStyle(color:olive,fontWeight:FontWeight.bold))),
@@ -544,7 +544,7 @@ class ReportsPage extends StatelessWidget {
   const ReportsPage({super.key,required this.data});
   @override Widget build(BuildContext context) {
     final events=(data['events'] as List).cast<Map<String,dynamic>>();
-    final wages=events.expand((e)=>((e['staffAssignments']??[]) as List)).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));
+    final wages=events.expand((e)=>((e['staffAssignments']??[]) as List)).where((a)=>a['attended']==true && (a['workCompleted']==true || (a['workCompleted']==null && ((a['wage'] as num?)??0)>0))).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));
     final expenses=events.expand((e)=>((e['expenses']??[]) as List)).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0))+(data['expenses'] as List).fold<num>(0,(n,e)=>n+((e['amount'] as num?)??0));
     final costs=wages+expenses;
     return ListView(padding:EdgeInsets.zero,children:[
@@ -560,7 +560,7 @@ class ReportsPage extends StatelessWidget {
       Padding(padding:const EdgeInsets.fromLTRB(18,10,18,24),child:panel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         const Text('Cost per event',style:TextStyle(fontSize:16,fontWeight:FontWeight.w700,color:coffee)),
         const SizedBox(height:8),
-        ...events.map((e){final w=((e['staffAssignments']??[]) as List).where((a)=>a['attended']==true).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));final x=((e['expenses']??[]) as List).fold<num>(0,(n,a)=>n+((a['amount'] as num?)??0));return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(fontWeight:FontWeight.w700,color:coffee)),Text('${e['date']??''} · ${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))])),Text(money(w+x),style:const TextStyle(fontWeight:FontWeight.w800,color:olive))]));}),
+        ...events.map((e){final w=((e['staffAssignments']??[]) as List).where((a)=>a['attended']==true && (a['workCompleted']==true || (a['workCompleted']==null && ((a['wage'] as num?)??0)>0))).fold<num>(0,(n,a)=>n+((a['wage'] as num?)??0));final x=((e['expenses']??[]) as List).fold<num>(0,(n,a)=>n+((a['amount'] as num?)??0));return Padding(padding:const EdgeInsets.symmetric(vertical:9),child:Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(e['name']??'Event',style:const TextStyle(fontWeight:FontWeight.w700,color:coffee)),Text('${e['date']??''} · ${e['location']??''}',style:const TextStyle(color:muted,fontSize:10))])),Text(money(w+x),style:const TextStyle(fontWeight:FontWeight.w800,color:olive))]));}),
         if(events.isEmpty) const Text('Create events to start building reports.',style:TextStyle(color:muted,fontSize:12)),
       ]))),
     ]);
